@@ -211,11 +211,11 @@ export srctree objtree VPATH
 version_h := include/generated/uapi/linux/version.h
 old_version_h := include/linux/version.h
 
-clean-targets := %clean mrproper cleandocs
+clean-targets := %clean mrproper
 no-dot-config-targets := $(clean-targets) \
-			 cscope gtags TAGS tags help% %docs check% coccicheck \
+			 help% check% \
 			 $(version_h) headers_% archheaders archscripts \
-			 %asm-generic kernelversion %src-pkg
+			 %asm-generic kernelversion
 no-sync-config-targets := $(no-dot-config-targets) install %install \
 			   kernelrelease
 
@@ -367,8 +367,6 @@ CHECK		= sparse
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void -Wno-unknown-attribute $(CF)
 NOSTDINC_FLAGS  =
-CFLAGS_KERNEL	=
-AFLAGS_KERNEL	=
 LDFLAGS_vmlinux =
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
@@ -395,8 +393,6 @@ KBUILD_CFLAGS   := -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -std=gnu89
 KBUILD_CPPFLAGS := -D__KERNEL__
-KBUILD_AFLAGS_KERNEL :=
-KBUILD_CFLAGS_KERNEL :=
 KBUILD_LDFLAGS :=
 GCC_PLUGINS_CFLAGS :=
 
@@ -406,9 +402,8 @@ export MAKE LEX YACC AWK INSTALLKERNEL PERL PYTHON PYTHON2 PYTHON3 UTS_MACHINE
 export HOSTCXX KBUILD_HOSTCXXFLAGS CHECK CHECKFLAGS
 
 export KBUILD_CPPFLAGS NOSTDINC_FLAGS LINUXINCLUDE OBJCOPYFLAGS KBUILD_LDFLAGS
-export KBUILD_CFLAGS CFLAGS_KERNEL
-export KBUILD_AFLAGS AFLAGS_KERNEL
-export KBUILD_AFLAGS_KERNEL KBUILD_CFLAGS_KERNEL
+export KBUILD_CFLAGS
+export KBUILD_AFLAGS
 export KBUILD_ARFLAGS
 
 # Files to ignore in find ... statements
@@ -946,12 +941,9 @@ ifneq ($(dtstree),)
 %.dtb: prepare3 scripts_dtc
 	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
 
-PHONY += dtbs dtbs_install dt_binding_check
-dtbs dtbs_check: prepare3 scripts_dtc
+PHONY += dtbs dtbs_install
+dtbs: prepare3 scripts_dtc
 	$(Q)$(MAKE) $(build)=$(dtstree)
-
-dtbs_check: export CHECK_DTBS=1
-dtbs_check: dt_binding_check
 
 dtbs_install:
 	$(Q)$(MAKE) $(dtbinst)=$(dtstree)
@@ -965,9 +957,6 @@ endif
 PHONY += scripts_dtc
 scripts_dtc: scripts_basic
 	$(Q)$(MAKE) $(build)=scripts/dtc
-
-dt_binding_check: scripts_dtc
-	$(Q)$(MAKE) $(build)=Documentation/devicetree/bindings
 
 ###
 # Cleaning is done on three levels.
@@ -1058,14 +1047,9 @@ help:
 	 echo  '                    (default: $(INSTALL_HDR_PATH))'; \
 	 echo  ''
 	@echo  'Static analysers:'
-	@echo  '  checkstack      - Generate a list of stack hogs'
-	@echo  '  namespacecheck  - Name space analysis on compiled kernel'
-	@echo  '  versioncheck    - Sanity check on version.h usage'
 	@echo  '  includecheck    - Check for duplicate included header files'
-	@echo  '  export_report   - List the usages of all exported symbols'
 	@echo  '  headers_check   - Sanity check on exported headers'
 	@echo  '  headerdep       - Detect inclusion cycles in headers'
-	@echo  '  coccicheck      - Check with Coccinelle'
 	@echo  ''
 	@$(if $(dtstree), \
 		echo 'Devicetree:'; \
@@ -1139,42 +1123,14 @@ clean: $(clean-dirs)
 # Scripts to check various things for consistency
 # ---------------------------------------------------------------------------
 
-PHONY += includecheck versioncheck coccicheck namespacecheck export_report
+PHONY += includecheck
 
 includecheck:
 	find $(srctree)/* $(RCS_FIND_IGNORE) \
 		-name '*.[hcS]' -type f -print | sort \
 		| xargs $(PERL) -w $(srctree)/scripts/checkincludes.pl
 
-versioncheck:
-	find $(srctree)/* $(RCS_FIND_IGNORE) \
-		-name '*.[hcS]' -type f -print | sort \
-		| xargs $(PERL) -w $(srctree)/scripts/checkversion.pl
-
-coccicheck:
-	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/$@
-
-namespacecheck:
-	$(PERL) $(srctree)/scripts/namespace.pl
-
-export_report:
-	$(PERL) $(srctree)/scripts/export_report.pl
-
-PHONY += checkstack kernelrelease kernelversion image_name
-
-# UML needs a little special treatment here.  It wants to use the host
-# toolchain, so needs $(SUBARCH) passed to checkstack.pl.  Everyone
-# else wants $(ARCH), including people doing cross-builds, which means
-# that $(SUBARCH) doesn't work here.
-ifeq ($(ARCH), um)
-CHECKSTACK_ARCH := $(SUBARCH)
-else
-CHECKSTACK_ARCH := $(ARCH)
-endif
-
-checkstack:
-	$(OBJDUMP) -d vmlinux $$(find . -name '*.ko') | \
-	$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
+PHONY += kernelrelease kernelversion image_name
 
 kernelrelease:
 	@echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
