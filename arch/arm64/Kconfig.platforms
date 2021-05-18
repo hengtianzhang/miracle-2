@@ -1,0 +1,6 @@
+menu "Platform selection"
+
+config ARCH_ORIGIN
+	bool "Orign platform"
+
+endmenu

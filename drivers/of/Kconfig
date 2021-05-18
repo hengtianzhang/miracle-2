@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-2.0
+config DTC
+	bool
+
+menuconfig OF
+	bool "Device Tree and Open Firmware support"
+	help
+	  This option enables the device tree infrastructure.
+	  It is automatically selected by platforms that need it or can
+	  be enabled manually for unittests, overlays or
+	  compile-coverage.
+
+if OF
+
+config OF_ALL_DTBS
+	bool "Build all Device Tree Blobs"
+	select DTC
+	help
+	  This option builds all possible Device Tree Blobs (DTBs) for the
+	  current architecture.
+
+	  If unsure, say N here, but this option is safe to enable.
+
+config OF_FLATTREE
+	bool
+	select DTC
+	select LIBFDT
+	select CRC32
+
+config OF_EARLY_FLATTREE
+	bool
+	select OF_FLATTREE
+
+endif # OF

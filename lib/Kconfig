@@ -1,0 +1,26 @@
+#
+# Library configuration
+#
+
+menu "Library routines"
+
+config BITREVERSE
+	bool
+
+config CRC32
+	bool "CRC32/CRC32c functions"
+	default y
+	select BITREVERSE
+	help
+	  This option is provided for the case where no in-kernel-tree
+	  modules require CRC32/CRC32c functions, but a module built outside
+	  the kernel tree does. Such modules that use library CRC32/CRC32c
+	  functions require M here.
+
+#
+# libfdt files, only selected if needed.
+#
+config LIBFDT
+	bool
+
+endmenu
