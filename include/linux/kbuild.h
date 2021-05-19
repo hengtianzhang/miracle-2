@@ -1,5 +1,5 @@
-#ifndef __LINUX_KBUILD_H
-#define __LINUX_KBUILD_H
+#ifndef __LINUX_KBUILD_H_
+#define __LINUX_KBUILD_H_
 
 #define DEFINE(sym, val) \
         asm volatile("\n->" #sym " %0 " #val : : "i" (val))
@@ -12,4 +12,4 @@
 #define COMMENT(x) \
 	asm volatile("\n->#" x)
 
-#endif
+#endif /* __LINUX_KBUILD_H_ */
