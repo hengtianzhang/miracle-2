@@ -182,15 +182,6 @@ quiet_cmd_cpp_lds_S = LDS     $@
 $(obj)/%.lds: $(src)/%.lds.S FORCE
 	$(call if_changed_dep,cpp_lds_S)
 
-# ASN.1 grammar
-# ---------------------------------------------------------------------------
-quiet_cmd_asn1_compiler = ASN.1   $@
-      cmd_asn1_compiler = $(objtree)/scripts/asn1_compiler $< \
-				$(subst .h,.c,$@) $(subst .c,.h,$@)
-
-$(obj)/%.asn1.c $(obj)/%.asn1.h: $(src)/%.asn1 $(objtree)/scripts/asn1_compiler
-	$(call cmd,asn1_compiler)
-
 # Build the compiled-in targets
 # ---------------------------------------------------------------------------
 
@@ -239,12 +230,10 @@ targets := $(filter-out $(PHONY), $(targets))
 intermediate_targets = $(foreach sfx, $(2), \
 				$(patsubst %$(strip $(1)),%$(sfx), \
 					$(filter %$(strip $(1)), $(targets))))
-# %.asn1.o <- %.asn1.[ch] <- %.asn1
 # %.dtb.o <- %.dtb.S <- %.dtb <- %.dts
 # %.lex.o <- %.lex.c <- %.l
 # %.tab.o <- %.tab.[ch] <- %.y
-targets += $(call intermediate_targets, .asn1.o, .asn1.c .asn1.h) \
-	   $(call intermediate_targets, .dtb.o, .dtb.S .dtb) \
+targets += $(call intermediate_targets, .dtb.o, .dtb.S .dtb) \
 	   $(call intermediate_targets, .lex.o, .lex.c) \
 	   $(call intermediate_targets, .tab.o, .tab.c .tab.h)
 

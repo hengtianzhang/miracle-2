@@ -1,5 +1,13 @@
 config ARM64
 	def_bool y
+	select ARCH_SUPPORTS_INT128 if GCC_VERSION >= 50000 || CC_IS_CLANG
+	select ARCH_WANT_FRAME_POINTERS
+	select CRC32
+	select FRAME_POINTER
+	select HAVE_ARCH_BITREVERSE
+	select HAVE_STACKPROTECTOR
+	select OF
+	select OF_EARLY_FLATTREE
 
 config 64BIT
 	def_bool y

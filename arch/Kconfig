@@ -66,4 +66,10 @@ config STACKPROTECTOR_STRONG
 	  about 20% of all kernel functions, which increases the kernel code
 	  size by about 2%.
 
+config HAVE_STACK_VALIDATION
+	bool
+	help
+	  Architecture supports the 'objtool check' host tool command, which
+	  performs compile-time stack metadata validation.
+
 endmenu

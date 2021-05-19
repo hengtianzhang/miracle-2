@@ -22,9 +22,6 @@ config CLANG_VERSION
 	int
 	default $(shell,$(srctree)/scripts/clang-version.sh $(CC))
 
-config BUILDTIME_EXTABLE_SORT
-	bool
-
 menu "General setup"
 
 config LOCALVERSION
@@ -61,6 +58,12 @@ config BUILD_BIN2C
 	bool
 	default n
 
+#
+# For architectures that know their GCC __int128 support is sound
+#
+config ARCH_SUPPORTS_INT128
+	bool
+
 choice
 	prompt "Compiler optimization level"
 	default CC_OPTIMIZE_FOR_PERFORMANCE
@@ -85,11 +88,3 @@ endchoice
 endmenu		# General setup
 
 source "arch/Kconfig"
-
-config ASN1
-	bool
-	help
-	  Build a simple ASN.1 grammar compiler that produces a bytecode output
-	  that can be interpreted by the ASN.1 stream decoder and used to
-	  inform it as to what tags are to be expected in a stream and what
-	  functions to call on what tags.
