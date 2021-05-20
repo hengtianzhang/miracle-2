@@ -52,6 +52,9 @@ endif
 # ===========================================================================
 
 ifneq ($(strip $(lib-y) $(lib-)),)
+ifneq ($(strip $(obj-y) $(obj-)),)
+$(error $$(obj-y) and $$(lib-y) are not allowed to be in the same makefile)
+endif
 lib-target := $(obj)/lib.a
 endif
 
