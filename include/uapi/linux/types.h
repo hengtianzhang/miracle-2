@@ -11,8 +11,6 @@
 #endif /* !__EXPORTED_HEADERS__ */
 #endif
 
-#include <linux/posix_types.h>
-
 /*
  * Below are truly Linux-specific types that should never collide with
  * any application/library that wants linux/types.h.
@@ -53,6 +51,14 @@ typedef __s32 s32;
 typedef __u32 u32;
 typedef __s64 s64;
 typedef __u64 u64;
+
+#if __BITS_PER_LONG != 64
+typedef u32		size_t;
+typedef s32		ssize_t;
+#else
+typedef u64		size_t;
+typedef s64		ssize_t;
+#endif
 
 #endif /* !__ASSEMBLY__ */
 
