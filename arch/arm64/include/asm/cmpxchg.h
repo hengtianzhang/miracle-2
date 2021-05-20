@@ -221,7 +221,7 @@ __CMPXCHG_GEN(_mb)
 })
 
 #define __CMPXCHG_DBL(name, mb, rel, cl)				\
-static inline long long __cmpxchg_double##name(u64 old1,		\
+static inline s64 __cmpxchg_double##name(u64 old1,		\
 				      u64 old2,		\
 				      u64 new1,		\
 				      u64 new2,		\

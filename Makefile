@@ -758,7 +758,7 @@ vmlinux-alldirs	:= $(sort $(vmlinux-dirs) $(patsubst %/,%,$(filter %/, \
 init-y		:= $(patsubst %/, %/built-in.a, $(init-y))
 core-y		:= $(patsubst %/, %/built-in.a, $(core-y))
 drivers-y	:= $(patsubst %/, %/built-in.a, $(drivers-y))
-libs-y1		:= $(patsubst %/, %/lib.a, $(libs-y))
+libs-y1		:= $(patsubst %/, %/ulib/lib.a, $(libs-y))
 libs-y2		:= $(patsubst %/, %/built-in.a, $(filter-out %.a, $(libs-y)))
 
 # Externally visible symbols (used by link-vmlinux.sh)

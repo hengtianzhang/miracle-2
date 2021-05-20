@@ -26,6 +26,12 @@ config CRC32
 	  functions require M here.
 
 #
+# Generic 64-bit atomic support is selected if needed
+#
+config GENERIC_ATOMIC64
+       bool
+
+#
 # libfdt files, only selected if needed.
 #
 config LIBFDT

@@ -1,1 +1,1 @@
-lib-y := test.o
+obj-y := ulib/
