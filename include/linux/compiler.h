@@ -112,7 +112,7 @@
 #include <asm/barrier.h>
 
 static __always_inline
-void __read_once_size(const volatile void *p, void *res, int size)
+void __read_once_size(const volatile void *p, void *res, __s32 size)
 {
 	switch (size) {							\
 	case 1: *(__u8 *)res = *(volatile __u8 *)p; break;		\
@@ -136,7 +136,7 @@ void __read_once_size(const volatile void *p, void *res, int size)
 #define READ_ONCE(x) __READ_ONCE(x)
 
 static __always_inline
-void __write_once_size(volatile void *p, void *res, int size)
+void __write_once_size(volatile void *p, void *res, __s32 size)
 {
 	switch (size) {
 	case 1: *(volatile __u8 *)p = *(__u8 *)res; break;
@@ -175,7 +175,7 @@ void __write_once_size(volatile void *p, void *res, int size)
  * offset_to_ptr - convert a relative memory offset to an absolute pointer
  * @off:	the address of the 32-bit offset value
  */
-static inline void *offset_to_ptr(const int *off)
+static inline void *offset_to_ptr(const __s32 *off)
 {
 	return (void *)((unsigned long)off + *off);
 }

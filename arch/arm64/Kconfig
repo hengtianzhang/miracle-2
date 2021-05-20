@@ -18,6 +18,10 @@ config ARCH_PHYS_ADDR_T_64BIT
 config ARCH_DMA_ADDR_T_64BIT
 	def_bool y
 
+config ILLEGAL_POINTER_VALUE
+	hex
+	default 0xdead000000000000
+
 config SMP
 	def_bool y
 
