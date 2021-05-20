@@ -5,48 +5,51 @@
 #ifndef __ASSEMBLY__
 
 #ifdef __CHECKER__
-# define __user		__attribute__((noderef, address_space(1)))
-# define __kernel	__attribute__((address_space(0)))
-# define __safe		__attribute__((safe))
-# define __force	__attribute__((force))
-# define __nocast	__attribute__((nocast))
-# define __iomem	__attribute__((noderef, address_space(2)))
-# define __must_hold(x)	__attribute__((context(x,1,1)))
-# define __acquires(x)	__attribute__((context(x,0,1)))
-# define __releases(x)	__attribute__((context(x,1,0)))
-# define __acquire(x)	__context__(x,1)
-# define __release(x)	__context__(x,-1)
-# define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
-# define __percpu	__attribute__((noderef, address_space(3)))
-# define __rcu		__attribute__((noderef, address_space(4)))
-# define __private	__attribute__((noderef))
+#define __user		__attribute__((noderef, address_space(1)))
+#define __kernel	__attribute__((address_space(0)))
+#define __safe		__attribute__((safe))
+#define __force	__attribute__((force))
+#define __nocast	__attribute__((nocast))
+#define __iomem	__attribute__((noderef, address_space(2)))
+#define __must_hold(x)	__attribute__((context(x,1,1)))
+#define __acquires(x)	__attribute__((context(x,0,1)))
+#define __releases(x)	__attribute__((context(x,1,0)))
+#define __acquire(x)	__context__(x,1)
+#define __release(x)	__context__(x,-1)
+#define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
+#define __percpu	__attribute__((noderef, address_space(3)))
+#define __rcu		__attribute__((noderef, address_space(4)))
+#define __private	__attribute__((noderef))
 extern void __chk_user_ptr(const volatile void __user *);
 extern void __chk_io_ptr(const volatile void __iomem *);
-# define ACCESS_PRIVATE(p, member) (*((typeof((p)->member) __force *) &(p)->member))
+#define ACCESS_PRIVATE(p, member) (*((typeof((p)->member) __force *) &(p)->member))
+
 #else /* __CHECKER__ */
-# ifdef STRUCTLEAK_PLUGIN
-#  define __user __attribute__((user))
-# else
-#  define __user
-# endif
-# define __kernel
-# define __safe
-# define __force
-# define __nocast
-# define __iomem
-# define __chk_user_ptr(x) (void)0
-# define __chk_io_ptr(x) (void)0
-# define __builtin_warning(x, y...) (1)
-# define __must_hold(x)
-# define __acquires(x)
-# define __releases(x)
-# define __acquire(x) (void)0
-# define __release(x) (void)0
-# define __cond_lock(x,c) (c)
-# define __percpu
-# define __rcu
-# define __private
-# define ACCESS_PRIVATE(p, member) ((p)->member)
+
+#ifdef STRUCTLEAK_PLUGIN
+#define __user __attribute__((user))
+#else
+#define __user
+#endif
+
+#define __kernel
+#define __safe
+#define __force
+#define __nocast
+#define __iomem
+#define __chk_user_ptr(x) (void)0
+#define __chk_io_ptr(x) (void)0
+#define __builtin_warning(x, y...) (1)
+#define __must_hold(x)
+#define __acquires(x)
+#define __releases(x)
+#define __acquire(x) (void)0
+#define __release(x) (void)0
+#define __cond_lock(x,c) (c)
+#define __percpu
+#define __rcu
+#define __private
+#define ACCESS_PRIVATE(p, member) ((p)->member)
 #endif /* __CHECKER__ */
 
 /* Indirect macros required for expanded argument pasting, eg. __LINE__. */
@@ -136,7 +139,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 
 #endif /* __KERNEL__ */
 
-#endif /* __ASSEMBLY__ */
+#endif /* !__ASSEMBLY__ */
 
 /*
  * The below symbols may be defined for one or more, but not ALL, of the above
@@ -191,4 +194,4 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 #define __diag_error(compiler, version, option, comment) \
 	__diag_ ## compiler(version, error, option)
 
-#endif /* __LINUX_COMPILER_TYPES_H_ */
+#endif /* !__LINUX_COMPILER_TYPES_H_ */

@@ -4,6 +4,7 @@
 
 #include <linux/stddef.h>
 
+#define __EXPORTED_HEADERS__
 #include <uapi/linux/types.h>
 
 #ifndef __ASSEMBLY__
@@ -73,5 +74,5 @@ struct hlist_node {
 	struct hlist_node *next, **pprev;
 };
 
-#endif /*  __ASSEMBLY__ */
-#endif /* _LINUX_TYPES_H */
+#endif /* !__ASSEMBLY__ */
+#endif /* !__LINUX_TYPES_H_ */

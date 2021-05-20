@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ASM_BITSPERLONG_H
-#define __ASM_BITSPERLONG_H
+#ifndef __UAPI_ASM_BITSPERLONG_H_
+#define __UAPI_ASM_BITSPERLONG_H_
 
 #define __BITS_PER_LONG 64
 
 #include <asm-generic/bitsperlong.h>
 
-#endif	/* __ASM_BITSPERLONG_H */
+#endif	/* !__UAPI_ASM_BITSPERLONG_H_ */

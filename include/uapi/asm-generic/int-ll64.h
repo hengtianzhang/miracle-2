@@ -34,7 +34,7 @@ typedef __signed__ long long __s64;
 typedef unsigned long long __u64;
 #endif
 
-#endif /* __ASSEMBLY__ */
+#endif /* !__ASSEMBLY__ */
 
 
-#endif /* __UAPI_ASM_GENERIC_INT_LL64_H_ */
+#endif /* !__UAPI_ASM_GENERIC_INT_LL64_H_ */

@@ -180,7 +180,7 @@ static inline void *offset_to_ptr(const int *off)
 	return (void *)((unsigned long)off + *off);
 }
 
-#endif /* __ASSEMBLY__ */
+#endif /* !__ASSEMBLY__ */
 
 /* Compile time object size, -1 for unknown */
 #ifndef __compiletime_object_size
@@ -226,4 +226,4 @@ static inline void *offset_to_ptr(const int *off)
 /* &a[0] degrades to a pointer: a different type from an array */
 #define __must_be_array(a)	BUILD_BUG_ON_ZERO(__same_type((a), &(a)[0]))
 
-#endif /* __LINUX_COMPILER_H_ */
+#endif /* !__LINUX_COMPILER_H_ */

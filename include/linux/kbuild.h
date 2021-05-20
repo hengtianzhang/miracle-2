@@ -12,4 +12,4 @@
 #define COMMENT(x) \
 	asm volatile("\n->#" x)
 
-#endif /* __LINUX_KBUILD_H_ */
+#endif /* !__LINUX_KBUILD_H_ */

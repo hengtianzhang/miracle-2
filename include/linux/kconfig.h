@@ -55,4 +55,4 @@
  */
 #define IS_ENABLED(option) IS_BUILTIN(option)
 
-#endif /* __LINUX_KCONFIG_H_ */
+#endif /* !__LINUX_KCONFIG_H_ */

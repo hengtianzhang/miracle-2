@@ -84,6 +84,6 @@ typedef s64		ssize_t;
 #define S64_C(x) x
 #define U64_C(x) x
 
-#endif /* __ASSEMBLY__ */
+#endif /* !__ASSEMBLY__ */
 
-#endif
+#endif /* !__UAPI_LINUX_TYPES_H_ */

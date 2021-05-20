@@ -34,4 +34,4 @@ enum {
 #define offsetofend(TYPE, MEMBER) \
 	(offsetof(TYPE, MEMBER)	+ sizeof_field(TYPE, MEMBER))
 
-#endif
+#endif /* !__LINUX_STDDEF_H_ */
