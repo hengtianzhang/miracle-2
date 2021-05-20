@@ -52,27 +52,5 @@ typedef phys_addr_t resource_size_t;
  */
 typedef u64 irq_hw_number_t;
 
-typedef struct {
-	int counter;
-} atomic_t;
-
-#ifdef CONFIG_64BIT
-typedef struct {
-	long counter;
-} atomic64_t;
-#endif
-
-struct list_head {
-	struct list_head *next, *prev;
-};
-
-struct hlist_head {
-	struct hlist_node *first;
-};
-
-struct hlist_node {
-	struct hlist_node *next, **pprev;
-};
-
 #endif /* !__ASSEMBLY__ */
 #endif /* !__LINUX_TYPES_H_ */
