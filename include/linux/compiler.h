@@ -84,16 +84,16 @@
 #ifndef KENTRY
 #define KENTRY(sym)						\
 	extern typeof(sym) sym;					\
-	static const unsigned long __kentry_##sym		\
+	static const unsigned long long __kentry_##sym		\
 	__used							\
 	__section("___kentry" "+" #sym )			\
-	= (unsigned long)&sym;
+	= (unsigned long long)&sym;
 #endif
 
 #ifndef RELOC_HIDE
 #define RELOC_HIDE(ptr, off)					\
-  ({ unsigned long __ptr;					\
-     __ptr = (unsigned long) (ptr);				\
+  ({ unsigned long long __ptr;					\
+     __ptr = (unsigned long long) (ptr);				\
     (typeof(ptr)) (__ptr + (off)); })
 #endif
 
@@ -177,7 +177,7 @@ void __write_once_size(volatile void *p, void *res, __s32 size)
  */
 static inline void *offset_to_ptr(const __s32 *off)
 {
-	return (void *)((unsigned long)off + *off);
+	return (void *)((unsigned long long)off + *off);
 }
 
 #endif /* !__ASSEMBLY__ */

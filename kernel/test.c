@@ -1,5 +1,6 @@
-#include <linux/compiler.h>
-#include <linux/types.h>
+
+#include <asm/cmpxchg.h>
+
 __u64 a;
 __u64 b;
 

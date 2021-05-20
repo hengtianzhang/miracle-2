@@ -53,7 +53,7 @@
  */
 #define RELOC_HIDE(ptr, off)						\
 ({									\
-	unsigned long __ptr;						\
+	unsigned long long __ptr;						\
 	__asm__ ("" : "=r"(__ptr) : "0"(ptr));				\
 	(typeof(ptr)) (__ptr + (off));					\
 })

@@ -173,7 +173,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 /* Is this type a native word size -- useful for atomic operations */
 #define __native_word(t) \
 	(sizeof(t) == sizeof(char) || sizeof(t) == sizeof(short) || \
-	 sizeof(t) == sizeof(int) || sizeof(t) == sizeof(long))
+	 sizeof(t) == sizeof(int) || sizeof(t) == sizeof(long long))
 
 /* Helpers for emitting diagnostics in pragmas. */
 #ifndef __diag
