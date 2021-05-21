@@ -1,10 +1,9 @@
 
-#include <asm/daifflags.h>
+#include <linux/init.h>
 
 
 int test(void)
 {
-	int flags;
-	flags = local_daif_save();
+
 	return 0;
 }

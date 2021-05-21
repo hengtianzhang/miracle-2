@@ -21,6 +21,7 @@
 #ifndef HAVE_ARCH_BUG
 #define BUG() do { \
 	printk("BUG: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
+	barrier_before_unreachable();	\
 	panic("BUG!"); \
 } while (0)
 #endif
@@ -60,7 +61,7 @@
 #endif
 
 #define WARN_ON_ONCE(condition)	({				\
-	static bool __section(.data.unlikely) __warned;		\
+	static bool __section(.data.once) __warned;		\
 	int __ret_warn_once = !!(condition);			\
 								\
 	if (unlikely(__ret_warn_once))				\
@@ -70,7 +71,7 @@
 })
 
 #define WARN_ONCE(condition, format...)	({			\
-	static bool __section(.data.unlikely) __warned;		\
+	static bool __section(.data.once) __warned;		\
 	int __ret_warn_once = !!(condition);			\
 								\
 	if (unlikely(__ret_warn_once))				\

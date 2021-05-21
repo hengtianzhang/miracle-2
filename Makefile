@@ -497,6 +497,7 @@ export KBUILD_BUILTIN
 init-y		:= init/
 drivers-y	:= drivers/
 libs-y		:= lib/
+core-y		:= usr/
 
 ifeq ($(dot-config),1)
 include include/config/auto.conf
