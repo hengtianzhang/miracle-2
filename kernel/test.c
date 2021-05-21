@@ -1,9 +1,9 @@
 
-#include <linux/init.h>
+#include <linux/bitops.h>
 
 
 int test(void)
 {
-
-	return 0;
+	
+	return BITS_TO_LONGS(22);
 }

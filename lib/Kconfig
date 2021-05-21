@@ -15,6 +15,12 @@ config HAVE_ARCH_BITREVERSE
 	  This option enables the use of hardware bit-reversal instructions on
 	  architectures which support such operations.
 
+config GENERIC_FIND_FIRST_BIT
+	bool
+
+config ARCH_HAS_FAST_MULTIPLIER
+	bool
+
 config CRC32
 	bool "CRC32/CRC32c functions"
 	default y
