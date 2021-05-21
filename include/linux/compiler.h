@@ -136,6 +136,12 @@ void __read_once_size(const volatile void *p, void *res, __s32 size)
 #define READ_ONCE(x) __READ_ONCE(x)
 
 static __always_inline
+unsigned long long read_word_at_a_time(const void *addr)
+{
+	return *(unsigned long long *)addr;
+}
+
+static __always_inline
 void __write_once_size(volatile void *p, void *res, __s32 size)
 {
 	switch (size) {
