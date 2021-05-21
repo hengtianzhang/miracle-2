@@ -16,6 +16,9 @@ typedef s32		clockid_t;
 
 typedef _Bool	bool;
 
+typedef u64		uintptr_t;
+typedef s64		ptrdiff_t;
+
 typedef s64		loff_t;
 typedef s64		time_t;
 typedef s64		clock_t;
