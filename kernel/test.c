@@ -1,13 +1,7 @@
 
-#include <linux/atomic.h>
+#include <linux/rbree_augmented.h>
 
-__u64 a;
-__u64 b;
-
-atomic_t c;
-
-__u64 test(void)
+int test(void)
 {
-	atomic_read_acquire(&c);
-	return a+b;
+	return 0;
 }
