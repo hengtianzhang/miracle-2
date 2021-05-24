@@ -134,6 +134,19 @@ config LD_DEAD_CODE_DATA_ELIMINATION
 	  present. This option is not well tested yet, so use at your
 	  own risk.
 
+config BASE_FULL
+	default y
+	bool "Enable full-sized data structures for core"
+	help
+	  Disabling this option reduces the size of miscellaneous core
+	  kernel data structures. This saves memory on small machines,
+	  but may reduce performance.
+
 endmenu		# General setup
 
 source "arch/Kconfig"
+
+config BASE_SMALL
+	int
+	default 0 if BASE_FULL
+	default 1 if !BASE_FULL
