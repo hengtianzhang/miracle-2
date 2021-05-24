@@ -16,11 +16,11 @@
 #ifndef __ASM_WORD_AT_A_TIME_H_
 #define __ASM_WORD_AT_A_TIME_H_
 
-#ifndef __AARCH64EB__
-
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/bitops.h>
+
+#ifndef __AARCH64EB__
 
 struct word_at_a_time {
 	const u64 one_bits, high_bits;

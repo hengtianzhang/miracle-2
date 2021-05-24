@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-#ifndef _ASM_GENERIC_SWAB_H
-#define _ASM_GENERIC_SWAB_H
+#ifndef __UAPI_ASM_GENERIC_SWAB_H_
+#define __UAPI_ASM_GENERIC_SWAB_H_
 
 #include <asm/bitsperlong.h>
 
@@ -16,4 +16,4 @@
 #endif
 #endif
 
-#endif /* _ASM_GENERIC_SWAB_H */
+#endif /* !__UAPI_ASM_GENERIC_SWAB_H_ */

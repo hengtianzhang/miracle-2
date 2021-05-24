@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-#ifndef __ASM_WORD_AT_A_TIME_H_
-#define __ASM_WORD_AT_A_TIME_H_
+#ifndef __ASM_GENERIC_WORD_AT_A_TIME_H_
+#define __ASM_GENERIC_WORD_AT_A_TIME_H_
 
 #include <linux/kernel.h>
 
@@ -118,4 +118,4 @@ static inline u64 find_zero(u64 mask)
 }
 
 #endif /* __BIG_ENDIAN */
-#endif /* !__ASM_WORD_AT_A_TIME_H_ */
+#endif /* !__ASM_GENERIC_WORD_AT_A_TIME_H_ */
