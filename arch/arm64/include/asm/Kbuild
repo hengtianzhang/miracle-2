@@ -1,1 +1,3 @@
-# generic-y += FOO.h
+generic-y += mcs_spinlock.h
+generic-y += qrwlock.h
+generic-y += qspinlock.h

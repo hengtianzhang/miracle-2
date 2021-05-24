@@ -109,6 +109,8 @@ do {									\
 	__u.__val;							\
 })
 
+#include <asm/processor.h>
+
 #include <asm-generic/barrier.h>
 
 #endif	/* !__ASSEMBLY__ */

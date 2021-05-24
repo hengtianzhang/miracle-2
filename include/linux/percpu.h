@@ -3,6 +3,7 @@
 #define __LINUX_PERCPU_H_
 
 #include <linux/threads.h>
+#include <linux/cache.h>
 
 #include <asm/percpu.h>
 
