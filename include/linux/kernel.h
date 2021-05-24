@@ -7,6 +7,8 @@
 #include <linux/container_of.h>
 #include <linux/printk.h>
 #include <linux/panic.h>
+#include <linux/errno.h>
+#include <linux/err.h>
 
 #include <uapi/linux/kernel.h>
 

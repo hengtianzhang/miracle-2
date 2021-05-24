@@ -56,8 +56,8 @@ typedef __u64 u64;
 typedef u32		size_t;
 typedef s32		ssize_t;
 #else
-typedef u64		size_t;
-typedef s64		ssize_t;
+typedef unsigned long		size_t;
+typedef __signed__ long		ssize_t;
 #endif
 
 #endif /* !__ASSEMBLY__ */

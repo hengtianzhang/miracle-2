@@ -1,7 +1,7 @@
 #ifndef __LINUX_PAGE_ALIGNED_H_
 #define __LINUX_PAGE_ALIGNED_H_
 
-#include <asm/page-def.h>
+#include <asm/page.h>
 
 #define __page_aligned_data	__section(.data..page_aligned) __aligned(PAGE_SIZE)
 #define __page_aligned_bss	__section(.bss..page_aligned) __aligned(PAGE_SIZE)

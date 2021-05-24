@@ -54,7 +54,7 @@
 
 #include <linux/linkage.h>
 
-#include <asm/page-def.h>
+#include <asm/page.h>
 #include <asm/thread_info.h>
 
 #ifndef LOAD_OFFSET
