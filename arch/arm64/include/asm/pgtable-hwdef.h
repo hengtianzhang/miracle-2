@@ -1,8 +1,4 @@
 /*
- * Based on arch/arm/kernel/asm-offsets.c
- *
- * Copyright (C) 1995-2003 Russell King
- *               2001-2002 Keith Owens
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,18 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <linux/kbuild.h>
+#ifndef __ASM_PGTABLE_HWDEF_H_
+#define __ASM_PGTABLE_HWDEF_H_
 
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
+/*
+ * TCR flags.
+ */
+#define TCR_T0SZ_OFFSET		0
+#define TCR_T1SZ_OFFSET		16
+#define TCR_T0SZ(x)		((UL(64) - (x)) << TCR_T0SZ_OFFSET)
+#define TCR_T1SZ(x)		((UL(64) - (x)) << TCR_T1SZ_OFFSET)
+#define TCR_TxSZ(x)		(TCR_T0SZ(x) | TCR_T1SZ(x))
+#define TCR_TxSZ_WIDTH		6
+#define TCR_T0SZ_MASK		(((UL(1) << TCR_TxSZ_WIDTH) - 1) << TCR_T0SZ_OFFSET)
 
-int main(void)
-{
-#ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
-#endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
-	return 0;
-}
+#define PTE_ADDR_MASK 48
+
+#endif /* !__ASM_PGTABLE_HWDEF_H_ */

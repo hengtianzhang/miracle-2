@@ -59,6 +59,7 @@ SECTIONS
 	_etext = .;			/* End of text section */
 
 	RO_DATA(PAGE_SIZE)		/* everything from this point to     */
+	EXCEPTION_TABLE(8)		/* __init_begin will be marked RO NX */
 	NOTES
 
 	swapper_pg_dir = .;

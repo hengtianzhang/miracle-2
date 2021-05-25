@@ -1,9 +1,8 @@
 /*
- * Based on arch/arm/kernel/asm-offsets.c
+ * Based on arch/arm/lib/strrchr.S
  *
- * Copyright (C) 1995-2003 Russell King
- *               2001-2002 Keith Owens
- * Copyright (C) 2012 ARM Ltd.
+ * Copyright (C) 1995-2000 Russell King
+ * Copyright (C) 2013 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -17,18 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <linux/kbuild.h>
 
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
+#include <linux/linkage.h>
 
-int main(void)
-{
-#ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
-#endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
-	return 0;
-}
+#include <asm/assembler.h>
+
+/*
+ * Find the last occurrence of a character in a string.
+ *
+ * Parameters:
+ *	x0 - str
+ *	x1 - c
+ * Returns:
+ *	x0 - address of last occurrence of 'c' or 0
+ */
+WEAK(strrchr)
+	mov	x3, #0
+	and	w1, w1, #0xff
+1:	ldrb	w2, [x0], #1
+	cbz	w2, 2f
+	cmp	w2, w1
+	b.ne	1b
+	sub	x3, x0, #1
+	b	1b
+2:	mov	x0, x3
+	ret
+ENDPIPROC(strrchr)

@@ -1,4 +1,4 @@
-#include <linux/percpu.h>
+#include <linux/crc32.h>
 
 int test(void)
 {

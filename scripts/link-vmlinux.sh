@@ -86,6 +86,11 @@ mksysmap()
 	${CONFIG_SHELL} "${srctree}/scripts/mksysmap" ${1} ${2}
 }
 
+sortextable()
+{
+	${objtree}/scripts/sortextable ${1}
+}
+
 # Delete output files in case of error
 cleanup()
 {
@@ -151,6 +156,11 @@ archive_builtin
 
 info LD vmlinux
 vmlinux_link vmlinux
+
+if [ -n "${CONFIG_BUILDTIME_EXTABLE_SORT}" ]; then
+	info SORTEX vmlinux
+	sortextable vmlinux
+fi
 
 info SYSMAP System.map
 mksysmap vmlinux System.map

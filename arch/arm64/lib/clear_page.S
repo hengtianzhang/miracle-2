@@ -1,8 +1,4 @@
 /*
- * Based on arch/arm/kernel/asm-offsets.c
- *
- * Copyright (C) 1995-2003 Russell King
- *               2001-2002 Keith Owens
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,18 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <linux/kbuild.h>
 
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
+#include <linux/linkage.h>
+#include <linux/const.h>
+#include <asm/assembler.h>
+#include <asm/page.h>
 
-int main(void)
-{
-#ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
-#endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
-	return 0;
-}
+/*
+ * Clear page @dest
+ *
+ * Parameters:
+ *	x0 - dest
+ */
+ENTRY(clear_page)
+	mrs	x1, dczid_el0
+	and	w1, w1, #0xf
+	mov	x2, #4
+	lsl	x1, x2, x1
+
+1:	dc	zva, x0
+	add	x0, x0, x1
+	tst	x0, #(PAGE_SIZE - 1)
+	b.ne	1b
+	ret
+ENDPROC(clear_page)

@@ -1,9 +1,8 @@
 /*
- * Based on arch/arm/kernel/asm-offsets.c
+ * Based on arch/arm/lib/memchr.S
  *
- * Copyright (C) 1995-2003 Russell King
- *               2001-2002 Keith Owens
- * Copyright (C) 2012 ARM Ltd.
+ * Copyright (C) 1995-2000 Russell King
+ * Copyright (C) 2013 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -17,18 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <linux/kbuild.h>
 
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
+#include <linux/linkage.h>
 
-int main(void)
-{
-#ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
-#endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
-	return 0;
-}
+#include <asm/assembler.h>
+
+/*
+ * Find a character in an area of memory.
+ *
+ * Parameters:
+ *	x0 - buf
+ *	x1 - c
+ *	x2 - n
+ * Returns:
+ *	x0 - address of first occurrence of 'c' or 0
+ */
+WEAK(memchr)
+	and	w1, w1, #0xff
+1:	subs	x2, x2, #1
+	b.mi	2f
+	ldrb	w3, [x0], #1
+	cmp	w3, w1
+	b.ne	1b
+	sub	x0, x0, #1
+	ret
+2:	mov	x0, #0
+	ret
+ENDPIPROC(memchr)

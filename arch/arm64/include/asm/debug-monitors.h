@@ -1,8 +1,4 @@
 /*
- * Based on arch/arm/kernel/asm-offsets.c
- *
- * Copyright (C) 1995-2003 Russell King
- *               2001-2002 Keith Owens
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,18 +13,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <linux/kbuild.h>
+#ifndef __ASM_DEBUG_MONITORS_H_
+#define __ASM_DEBUG_MONITORS_H_
 
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
+#ifdef __KERNEL__
 
-int main(void)
-{
-#ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
-#endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
-	return 0;
-}
+/* Low-level stepping controls. */
+#define DBG_MDSCR_SS		(1 << 0)
+#define DBG_SPSR_SS		(1 << 21)
+
+/* MDSCR_EL1 enabling bits */
+#define DBG_MDSCR_KDE		(1 << 13)
+#define DBG_MDSCR_MDE		(1 << 15)
+#define DBG_MDSCR_MASK		~(DBG_MDSCR_KDE | DBG_MDSCR_MDE)
+
+#define	DBG_ESR_EVT(x)		(((x) >> 27) & 0x7)
+
+/* AArch64 */
+#define DBG_ESR_EVT_HWBP	0x0
+#define DBG_ESR_EVT_HWSS	0x1
+#define DBG_ESR_EVT_HWWP	0x2
+#define DBG_ESR_EVT_BRK		0x6
+
+#endif	/* __KERNEL__ */
+#endif /* !__ASM_DEBUG_MONITORS_H_ */

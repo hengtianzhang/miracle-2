@@ -22,6 +22,9 @@ config CLANG_VERSION
 	int
 	default $(shell,$(srctree)/scripts/clang-version.sh $(CC))
 
+config BUILDTIME_EXTABLE_SORT
+	bool
+
 menu "General setup"
 
 config LOCALVERSION

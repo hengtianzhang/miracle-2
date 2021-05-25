@@ -255,6 +255,17 @@
 	}
 
 /*
+ * Exception table
+ */
+#define EXCEPTION_TABLE(align)						\
+	. = ALIGN(align);						\
+	__ex_table : AT(ADDR(__ex_table) - LOAD_OFFSET) {		\
+		__start___ex_table = .;					\
+		KEEP(*(__ex_table))					\
+		__stop___ex_table = .;					\
+	}
+
+/*
  * Init task
  */
 #define INIT_TASK_DATA_SECTION(align)					\
