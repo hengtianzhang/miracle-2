@@ -3,7 +3,7 @@
 # Makefile for some libs needed in the kernel.
 #
 lib-y := rbtree.o hweight.o find_bit.o ctype.o string.o	\
-			bitmap.o
+			bitmap.o div64.o
 
 lib-$(CONFIG_CRC32)	+= crc32.o
 lib-$(CONFIG_BITREVERSE) += bitrev.o

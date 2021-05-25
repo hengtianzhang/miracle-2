@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <linux/types.h>
 #include <linux/container_of.h>
+#include <linux/math64.h>
+#include <linux/log2.h>
 #include <linux/printk.h>
 #include <linux/panic.h>
 #include <linux/errno.h>
