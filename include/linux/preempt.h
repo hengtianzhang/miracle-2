@@ -23,6 +23,9 @@
 #define preempt_enable_notrace()		barrier()
 #define preemptible()				0
 
-
+static inline int preempt_count(void)
+{
+	return 1;
+}
 
 #endif /* !__LINUX_PREEMPT_H_ */
