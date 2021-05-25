@@ -22,6 +22,22 @@ config CLANG_VERSION
 	int
 	default $(shell,$(srctree)/scripts/clang-version.sh $(CC))
 
+config LD_IS_BFD
+	def_bool $(success,test "$(lld-name)" = BFD)
+
+config LD_VERSION
+	int
+	default $(lld-version) if LD_IS_BFD
+	default 0
+
+config LD_IS_LLD
+	def_bool $(success,test "$(lld-name)" = LLD)
+
+config LLD_VERSION
+	int
+	default $(lld-version) if LD_IS_LLD
+	default 0
+
 config BUILDTIME_EXTABLE_SORT
 	bool
 
@@ -136,6 +152,12 @@ config LD_DEAD_CODE_DATA_ELIMINATION
 	  silently broken kernel if the required annotations are not
 	  present. This option is not well tested yet, so use at your
 	  own risk.
+
+config LD_ORPHAN_WARN
+	def_bool y
+	depends on ARCH_WANT_LD_ORPHAN_WARN
+	depends on !LD_IS_LLD || LLD_VERSION >= 110000
+	depends on $(ld-option,--orphan-handling=warn)
 
 config BASE_FULL
 	default y

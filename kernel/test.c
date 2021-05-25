@@ -1,4 +1,4 @@
-#include <linux/crc32.h>
+#include <linux/libfdt.h>
 
 int test(void)
 {

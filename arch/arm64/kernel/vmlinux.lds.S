@@ -115,4 +115,14 @@ SECTIONS
 	BSS_SECTION(0, 0, 0)
 
 	STABS_DEBUG
+	DWARF_DEBUG
+	ELF_DETAILS
+
+	/*
+	 * Sections that should stay zero sized, which is safer to
+	 * explicitly check instead of blindly discarding.
+	 */
+	.plt : {
+		*(.plt) *(.plt.*) *(.iplt) *(.igot .igot.plt)
+	}
 }
