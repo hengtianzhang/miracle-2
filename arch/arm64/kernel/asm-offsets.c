@@ -23,6 +23,9 @@
 #define VMA_VM_MM 3
 #define MM_CONTEXT_ID 4
 
+#define DMA_TO_DEVICE 0
+#define DMA_FROM_DEVICE 1
+
 int main(void)
 {
 #ifdef CONFIG_STACKPROTECTOR
@@ -30,5 +33,7 @@ int main(void)
 #endif
 	DEFINE(VMA_VM_MM,		VMA_VM_MM);
 	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
+	DEFINE(DMA_TO_DEVICE,		DMA_TO_DEVICE);
+	DEFINE(DMA_FROM_DEVICE,	DMA_FROM_DEVICE);
 	return 0;
 }
