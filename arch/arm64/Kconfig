@@ -7,6 +7,7 @@ config ARM64
 	select BUILDTIME_EXTABLE_SORT
 	select CRC32
 	select FRAME_POINTER
+	select HAVE_ALIGNED_STRUCT_PAGE
 	select HAVE_ARCH_BITREVERSE
 	select HAVE_EFFICIENT_UNALIGNED_ACCESS
 	select HAVE_STACKPROTECTOR
@@ -15,6 +16,18 @@ config ARM64
 
 config 64BIT
 	def_bool y
+
+config ARM64_PAGE_SHIFT
+	int
+	default 16 if ARM64_64K_PAGES
+	default 14 if ARM64_16K_PAGES
+	default 12
+
+config ARM64_CONT_SHIFT
+	int
+	default 5 if ARM64_64K_PAGES
+	default 7 if ARM64_16K_PAGES
+	default 4
 
 config ARCH_PHYS_ADDR_T_64BIT
 	def_bool y
@@ -31,6 +44,15 @@ config GENERIC_HWEIGHT
 
 config SMP
 	def_bool y
+
+config PGTABLE_LEVELS
+	int
+	default 2 if ARM64_16K_PAGES && ARM64_VA_BITS_36
+	default 2 if ARM64_64K_PAGES && ARM64_VA_BITS_42
+	default 3 if ARM64_64K_PAGES && ARM64_VA_BITS_48
+	default 3 if ARM64_4K_PAGES && ARM64_VA_BITS_39
+	default 3 if ARM64_16K_PAGES && ARM64_VA_BITS_47
+	default 4 if !ARM64_64K_PAGES && ARM64_VA_BITS_48
 
 source "arch/arm64/Kconfig.platforms"
 
@@ -64,6 +86,55 @@ config ARM64_64K_PAGES
 
 endchoice
 
+choice
+	prompt "Virtual address space size"
+	default ARM64_VA_BITS_39 if ARM64_4K_PAGES
+	default ARM64_VA_BITS_47 if ARM64_16K_PAGES
+	default ARM64_VA_BITS_42 if ARM64_64K_PAGES
+	help
+	  Allows choosing one of multiple possible virtual address
+	  space sizes. The level of translation table is determined by
+	  a combination of page size and virtual address space size.
+
+config ARM64_VA_BITS_36
+	bool "36-bit"
+	depends on ARM64_16K_PAGES
+
+config ARM64_VA_BITS_39
+	bool "39-bit"
+	depends on ARM64_4K_PAGES
+
+config ARM64_VA_BITS_42
+	bool "42-bit"
+	depends on ARM64_64K_PAGES
+
+config ARM64_VA_BITS_47
+	bool "47-bit"
+	depends on ARM64_16K_PAGES
+
+config ARM64_VA_BITS_48
+	bool "48-bit"
+
+endchoice
+
+config ARM64_VA_BITS
+	int
+	default 36 if ARM64_VA_BITS_36
+	default 39 if ARM64_VA_BITS_39
+	default 42 if ARM64_VA_BITS_42
+	default 47 if ARM64_VA_BITS_47
+	default 48 if ARM64_VA_BITS_48
+
+config ARM64_PA_BITS
+	int
+	default 48
+
+config CPU_BIG_ENDIAN
+	bool "Build big-endian kernel"
+	depends on !LD_IS_LLD || LLD_VERSION >= 130000
+	help
+	  Say Y if you plan on running a kernel with a big-endian userspace.
+
 config NR_CPUS
 	int "Maximum number of CPUs (2-4096)"
 	range 2 4096
@@ -72,12 +143,6 @@ config NR_CPUS
 
 config ARCH_HAS_CACHE_LINE_SIZE
 	def_bool y
-
-config CPU_BIG_ENDIAN
-	bool "Build big-endian kernel"
-	depends on !LD_IS_LLD || LLD_VERSION >= 130000
-	help
-	  Say Y if you plan on running a kernel with a big-endian userspace.
 
 config CC_HAVE_STACKPROTECTOR_SYSREG
 	def_bool $(cc-option,-mstack-protector-guard=sysreg -mstack-protector-guard-reg=sp_el0 -mstack-protector-guard-offset=0)
