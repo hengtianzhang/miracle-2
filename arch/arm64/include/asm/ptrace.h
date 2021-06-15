@@ -25,6 +25,7 @@
 #define CurrentEL_EL1		(1 << 2)
 #define CurrentEL_EL2		(2 << 2)
 
+#ifndef __ASSEMBLY__
 /*
  * This struct defines the way the registers are stored on the stack during an
  * exception. Note that sizeof(struct pt_regs) has to be a multiple of 16 (for
@@ -54,4 +55,5 @@ struct pt_regs {
 	u64 stackframe[2];
 };
 
+#endif /* !__ASSEMBLY__ */
 #endif /* !__ASM_PTRACE_H_ */

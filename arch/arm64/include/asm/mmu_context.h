@@ -1,7 +1,7 @@
 /*
- * Based on arch/arm/include/asm/processor.h
+ * Based on arch/arm/include/asm/mmu_context.h
  *
- * Copyright (C) 1995-1999 Russell King
+ * Copyright (C) 1996 Russell King.
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,29 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ASM_PROCESSOR_H_
-#define __ASM_PROCESSOR_H_
+#ifndef __ASM_MMU_CONTEXT_H_
+#define __ASM_MMU_CONTEXT_H_
 
 #ifndef __ASSEMBLY__
-#ifdef __KERNEL__
 
-#include <linux/types.h>
+/*
+ * TCR.T0SZ value to use when the ID map is active. Usually equals
+ * TCR_T0SZ(VA_BITS), unless system RAM is positioned very high in
+ * physical memory, in which case it will be smaller.
+ */
+extern u64 idmap_t0sz;
+extern u64 idmap_ptrs_per_pgd;
 
-static inline void cpu_relax(void)
-{
-	asm volatile("yield" ::: "memory");
-}
-
-#define ARCH_HAS_PREFETCHW
-static inline void prefetchw(const void *ptr)
-{
-	asm volatile("prfm pstl1keep, %a0\n" : : "p" (ptr));
-}
-
-struct thread_struct {
-	u64		fault_address;	/* fault info */
-};
-
-#endif /* __KERNEL__ */
 #endif /* !__ASSEMBLY__ */
-#endif /* !__ASM_PROCESSOR_H_ */
+#endif /* !__ASM_MMU_CONTEXT_H */

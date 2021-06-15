@@ -19,6 +19,8 @@
  */
 #include <linux/kbuild.h>
 
+#include <asm/smp.h>
+
 #define TSK_STACK_CANARY 1
 #define VMA_VM_MM 3
 #define MM_CONTEXT_ID 4
@@ -35,5 +37,10 @@ int main(void)
 	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
 	DEFINE(DMA_TO_DEVICE,		DMA_TO_DEVICE);
 	DEFINE(DMA_FROM_DEVICE,	DMA_FROM_DEVICE);
+
+	BLANK();
+	DEFINE(CPU_BOOT_STACK,	offsetof(struct secondary_data, stack));
+	DEFINE(CPU_BOOT_TASK,		offsetof(struct secondary_data, task));
+
 	return 0;
 }

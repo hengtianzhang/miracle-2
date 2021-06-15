@@ -20,4 +20,13 @@
 #include <asm/pgtable-hwdef.h>
 #include <asm/pgtable-prot.h>
 
+#ifndef __ASSEMBLY__
+
+/*
+ * ZERO_PAGE is a global shared page that is always zero: used
+ * for zero-mapped memory areas etc..
+ */
+extern u64 empty_zero_page[PAGE_SIZE / sizeof(u64)];
+
+#endif /* !__ASSEMBLY__ */
 #endif /* !__ASM_PGTABLE_H_ */

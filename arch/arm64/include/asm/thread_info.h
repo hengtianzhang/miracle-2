@@ -28,6 +28,8 @@
 #include <linux/types.h>
 
 #include <asm/stack_pointer.h>
+#include <asm/processor.h>
+#include <asm/memory.h>
 
 typedef u64 mm_segment_t;
 
@@ -109,8 +111,8 @@ struct thread_info {
 #define INIT_THREAD_INFO(tsk)						\
 {									\
 	.flags		= _TIF_FOREIGN_FPSTATE,				\
-	.preempt_count	= INIT_PREEMPT_COUNT,				\
-	.addr_limit	= KERNEL_DS,					\
+	.preempt_count	= 0,				\
+	.addr_limit	= 0,					\
 }
 
 #endif /* __KERNEL__ */

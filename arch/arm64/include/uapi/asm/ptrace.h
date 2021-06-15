@@ -20,8 +20,6 @@
 #ifndef __UAPI_ASM_PTRACE_H_
 #define __UAPI_ASM_PTRACE_H_
 
-#include <linux/types.h>
-
 /*
  * PSR bits
  */
@@ -59,6 +57,8 @@
 #define PSR_c		0x000000ff	/* Control		*/
 
 #ifndef __ASSEMBLY__
+
+#include <linux/types.h>
 
 /*
  * User structures for general purpose, floating point and debug registers.

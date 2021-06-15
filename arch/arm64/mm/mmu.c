@@ -1,7 +1,7 @@
 /*
- * Based on arch/arm/include/asm/processor.h
+ * Based on arch/arm/mm/mmu.c
  *
- * Copyright (C) 1995-1999 Russell King
+ * Copyright (C) 1995-2005 Russell King
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,29 +16,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ASM_PROCESSOR_H_
-#define __ASM_PROCESSOR_H_
-
-#ifndef __ASSEMBLY__
-#ifdef __KERNEL__
 
 #include <linux/types.h>
+#include <linux/cache.h>
+#include <linux/page_aligned.h>
 
-static inline void cpu_relax(void)
-{
-	asm volatile("yield" ::: "memory");
-}
+#include <asm/tlbflush.h>
+#include <asm/pgtable.h>
+#include <asm/kernel-pgtable.h>
+#include <asm/page.h>
+#include <asm/mmu_context.h>
 
-#define ARCH_HAS_PREFETCHW
-static inline void prefetchw(const void *ptr)
-{
-	asm volatile("prfm pstl1keep, %a0\n" : : "p" (ptr));
-}
+#define NO_BLOCK_MAPPINGS	BIT(0)
+#define NO_CONT_MAPPINGS	BIT(1)
 
-struct thread_struct {
-	u64		fault_address;	/* fault info */
-};
+u64 idmap_t0sz = TCR_T0SZ(VA_BITS);
+u64 idmap_ptrs_per_pgd = PTRS_PER_PGD;
+u64 vabits_user __ro_after_init;
 
-#endif /* __KERNEL__ */
-#endif /* !__ASSEMBLY__ */
-#endif /* !__ASM_PROCESSOR_H_ */
+u64 kimage_voffset __ro_after_init;
+
+/*
+ * Empty_zero_page is a special page that is used for zero-initialized data
+ * and COW.
+ */
+u64 empty_zero_page[PAGE_SIZE / sizeof(u64)] __page_aligned_bss;

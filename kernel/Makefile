@@ -3,6 +3,6 @@
 # Makefile for the linux kernel.
 #
 
-obj-y := test.o extable.o panic.o
+obj-y := extable.o panic.o
 
 obj-y += locking/
