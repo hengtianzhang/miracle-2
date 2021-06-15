@@ -4,6 +4,8 @@
 #include <linux/compiler.h>
 #include <linux/linkage.h>
 
+extern const char linux_banner[];
+
 asmlinkage __printf(1, 2) __cold
 int printk(const char *fmt, ...);
 
