@@ -30,7 +30,7 @@
  * VMEMMAP_SIZE - allows the whole linear region to be covered by
  *                a struct page array
  */
-#define VMEMMAP_SIZE (UL(1) << (VA_BITS - PAGE_SHIFT - 1 + STRUCT_PAGE_MAX_SHIFT))
+#define VMEMMAP_SIZE (ULL(1) << (VA_BITS - PAGE_SHIFT - 1 + STRUCT_PAGE_MAX_SHIFT))
 
 /*
  * PAGE_OFFSET - the virtual address of the start of the linear map (top
@@ -156,7 +156,6 @@ extern u64			vabits_user;
  * files.  Use virt_to_phys/phys_to_virt/__pa/__va instead.
  */
 
-
 /*
  * The linear kernel range starts in the middle of the virtual adddress
  * space. Testing the top bit for the start of the region is a
@@ -209,7 +208,6 @@ static inline void *phys_to_virt(phys_addr_t x)
  */
 #define __pa(x)			__virt_to_phys((u64)(x))
 #define __pa_symbol(x)		__phys_addr_symbol(RELOC_HIDE((u64)(x), 0))
-#define __pa_nodebug(x)		__virt_to_phys_nodebug((u64)(x))
 #define __va(x)			((void *)__phys_to_virt((phys_addr_t)(x)))
 #define pfn_to_kaddr(pfn)	__va((pfn) << PAGE_SHIFT)
 #define virt_to_pfn(x)      __phys_to_pfn(__virt_to_phys((u64)(x)))
@@ -220,6 +218,26 @@ static inline void *phys_to_virt(phys_addr_t x)
  *  virt_addr_valid(k)	indicates whether a virtual address is valid
  */
 #define ARCH_PFN_OFFSET		((u64)PHYS_PFN_OFFSET)
+
+#define __virt_to_pgoff(kaddr)	(((u64)(kaddr) & ~PAGE_OFFSET) / PAGE_SIZE * sizeof(struct page))
+#define __page_to_voff(kaddr)	(((u64)(kaddr) & ~VMEMMAP_START) * PAGE_SIZE / sizeof(struct page))
+
+#define page_to_virt(page)	({					\
+	u64 __addr =						\
+		((__page_to_voff(page)) | PAGE_OFFSET);			\
+	__addr = __tag_set(__addr, 0xff);		\
+	((void *)__addr);						\
+})
+
+#define virt_to_page(vaddr)	((struct page *)((__virt_to_pgoff(vaddr)) | VMEMMAP_START))
+
+#define _virt_addr_valid(kaddr)	pfn_valid((((u64)(kaddr) & ~PAGE_OFFSET) \
+					   + PHYS_OFFSET) >> PAGE_SHIFT)
+
+#define _virt_addr_is_linear(kaddr)	\
+	(__tag_reset((u64)(kaddr)) >= PAGE_OFFSET)
+#define virt_addr_valid(kaddr)		\
+	(_virt_addr_is_linear(kaddr) && _virt_addr_valid(kaddr))
 
 #endif /* !__ASSEMBLY__ */
 

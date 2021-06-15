@@ -16,9 +16,25 @@
 #ifndef __ASM_PGTABLE_H_
 #define __ASM_PGTABLE_H_
 
+#include <asm/proc-fns.h>
 #include <asm/memory.h>
 #include <asm/pgtable-hwdef.h>
 #include <asm/pgtable-prot.h>
+#include <asm/tlbflush.h>
+
+/*
+ * VMALLOC range.
+ *
+ * VMALLOC_START: beginning of the kernel vmalloc space
+ * VMALLOC_END: extends to the available space below vmmemmap, PCI I/O space
+ *	and fixed mappings
+ */
+#define VMALLOC_START		(VA_START)
+#define VMALLOC_END		(PAGE_OFFSET - PUD_SIZE - VMEMMAP_SIZE - SZ_64K)
+
+#define vmemmap			((struct page *)VMEMMAP_START - (memstart_addr >> PAGE_SHIFT))
+
+#define FIRST_USER_ADDRESS	0UL
 
 #ifndef __ASSEMBLY__
 
