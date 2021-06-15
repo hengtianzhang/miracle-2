@@ -115,6 +115,4 @@ struct thread_info {
 
 #endif /* __KERNEL__ */
 
-#define THREAD_SIZE		0x1000
-
 #endif /* !__ASM_THREAD_INFO_H_ */

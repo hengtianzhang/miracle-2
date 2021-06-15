@@ -6,13 +6,23 @@
  */
 #include <asm-generic/vmlinux.lds.h>
 
-#include <asm/page.h>
+#include <asm/kernel-pgtable.h>
+#include <asm/memory.h>
+#include <asm/cache.h>
+
+#include "image.h"
 
 #define ARM_EXIT_KEEP(x)	x
 #define ARM_EXIT_DISCARD(x)
 
 OUTPUT_ARCH(aarch64)
 ENTRY(_text)
+
+#define IDMAP_TEXT					\
+	. = ALIGN(SZ_4K);				\
+	__idmap_text_start = .;				\
+	*(.idmap.text)					\
+	__idmap_text_end = .;
 
 SECTIONS
 {
@@ -32,7 +42,7 @@ SECTIONS
 		*(.eh_frame)
 	}
 
-	. = 0;
+	. = KIMAGE_VADDR + TEXT_OFFSET;
 
 	.head.text : {
 		_text = .;
@@ -49,24 +59,29 @@ SECTIONS
 			SCHED_TEXT
 			CPUIDLE_TEXT
 			LOCK_TEXT
+			IDMAP_TEXT
 			*(.fixup)
 			*(.gnu.warning)
 		. = ALIGN(16);
 		*(.got)			/* Global offset table		*/
 	}
 
-	. = ALIGN(4096);
+	. = ALIGN(SEGMENT_ALIGN);
 	_etext = .;			/* End of text section */
 
 	RO_DATA(PAGE_SIZE)		/* everything from this point to     */
 	EXCEPTION_TABLE(8)		/* __init_begin will be marked RO NX */
 	NOTES
 
+	. = ALIGN(PAGE_SIZE);
+	idmap_pg_dir = .;
+	. += IDMAP_DIR_SIZE;
+
 	swapper_pg_dir = .;
 	. += PAGE_SIZE;
 	swapper_pg_end = .;
 
-	. = ALIGN(4096);
+	. = ALIGN(SEGMENT_ALIGN);
 	__init_begin = .;
 	__inittext_begin = .;
 
@@ -97,26 +112,61 @@ SECTIONS
 		INIT_RAM_FS
 		*(.init.rodata.* .init.bss)	/* from the EFI stub */
 	}
+	.exit.data : {
+		ARM_EXIT_KEEP(EXIT_DATA)
+	}
 
-	PERCPU_SECTION(1 << 8)
+	PERCPU_SECTION(L1_CACHE_BYTES)
 
 	.rela.dyn : ALIGN(8) {
 		*(.rela .rela*)
 	}
 
-	. = ALIGN(4096);
+	__rela_offset	= ABSOLUTE(ADDR(.rela.dyn) - KIMAGE_VADDR);
+	__rela_size	= SIZEOF(.rela.dyn);
+
+	. = ALIGN(SEGMENT_ALIGN);
 	__initdata_end = .;
 	__init_end = .;
 
 	_data = .;
 	_sdata = .;
-	RW_DATA_SECTION(1 << 8, PAGE_SIZE, 4096)
+	RW_DATA_SECTION(L1_CACHE_BYTES, PAGE_SIZE, THREAD_ALIGN)
+
+	/*
+	 * Data written with the MMU off but read with the MMU on requires
+	 * cache lines to be invalidated, discarding up to a Cache Writeback
+	 * Granule (CWG) of data from the cache. Keep the section that
+	 * requires this type of maintenance to be in its own Cache Writeback
+	 * Granule (CWG) area so the cache maintenance operations don't
+	 * interfere with adjacent data.
+	 */
+	.mmuoff.data.write : ALIGN(SZ_2K) {
+		__mmuoff_data_start = .;
+		*(.mmuoff.data.write)
+	}
+	. = ALIGN(SZ_2K);
+	.mmuoff.data.read : {
+		*(.mmuoff.data.read)
+		__mmuoff_data_end = .;
+	}
+
+	_edata = .;
 
 	BSS_SECTION(0, 0, 0)
+
+	. = ALIGN(PAGE_SIZE);
+	init_pg_dir = .;
+	. += INIT_DIR_SIZE;
+	init_pg_end = .;
+
+	_end = .;
 
 	STABS_DEBUG
 	DWARF_DEBUG
 	ELF_DETAILS
+
+	HEAD_SYMBOLS
 
 	/*
 	 * Sections that should stay zero sized, which is safer to
@@ -125,4 +175,15 @@ SECTIONS
 	.plt : {
 		*(.plt) *(.plt.*) *(.iplt) *(.igot .igot.plt)
 	}
+	ASSERT(SIZEOF(.plt) == 0, "Unexpected run-time procedure linkages detected!")
+
+	.data.rel.ro : { *(.data.rel.ro) }
+	ASSERT(SIZEOF(.data.rel.ro) == 0, "Unexpected RELRO detected!")
 }
+
+ASSERT(__idmap_text_end - (__idmap_text_start & ~(SZ_4K - 1)) <= SZ_4K,
+	"ID map text too big or misaligned")
+/*
+ * If padding is applied before .head.text, virt<->phys conversions will fail.
+ */
+ASSERT(_text == (KIMAGE_VADDR + TEXT_OFFSET), "HEAD is misaligned")

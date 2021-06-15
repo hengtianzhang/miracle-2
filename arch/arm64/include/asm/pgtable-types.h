@@ -20,6 +20,8 @@
 #ifndef __ASM_PGTABLE_TYPES_H_
 #define __ASM_PGTABLE_TYPES_H_
 
+#ifndef __ASSEMBLY__
+
 #include <linux/types.h>
 
 typedef u64 pteval_t;
@@ -54,4 +56,5 @@ typedef struct { pteval_t pgprot; } pgprot_t;
 #define pgprot_val(x)	((x).pgprot)
 #define __pgprot(x)	((pgprot_t) { (x) } )
 
+#endif /* !__ASSEMBLY__ */
 #endif /* !__ASM_PGTABLE_TYPES_H_ */

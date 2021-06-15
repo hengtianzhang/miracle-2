@@ -22,7 +22,6 @@
 #define __ASM_MEMORY_H_
 
 #include <linux/compiler.h>
-#include <linux/mm_types.h>
 #include <linux/sizes.h>
 
 #include <asm/page-def.h>
@@ -62,7 +61,7 @@
 #define THREAD_SIZE_ORDER	(THREAD_SHIFT - PAGE_SHIFT)
 #endif
 
-#define THREAD_SIZE		(UL(1) << THREAD_SHIFT)
+#define THREAD_SIZE		(ULL(1) << THREAD_SHIFT)
 
 #define THREAD_ALIGN		THREAD_SIZE
 
