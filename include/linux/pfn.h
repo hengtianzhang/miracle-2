@@ -6,6 +6,8 @@
 
 #include <linux/types.h>
 
+#include <asm/page.h>
+
 /*
  * pfn_t: encapsulates a page-frame number that is optionally backed
  * by memmap (struct page).  Whether a pfn_t has a 'struct page'

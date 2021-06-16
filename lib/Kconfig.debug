@@ -157,4 +157,15 @@ config DEBUG_KERNEL
 
 source "arch/$(SRCARCH)/Kconfig.debug"
 
+config MEMTEST
+	bool "Memtest"
+	---help---
+	  This option adds a kernel parameter 'memtest', which allows memtest
+	  to be set.
+	        memtest=0, mean disabled; -- default
+	        memtest=1, mean do 1 test pattern;
+	        ...
+	        memtest=17, mean do 17 test patterns.
+	  If you are unsure how to answer this question, answer N.
+
 endmenu # Kernel hacking

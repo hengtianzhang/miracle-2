@@ -1,3 +1,5 @@
+#include <linux/kernel.h>
+
 #ifdef CONFIG_STACKPROTECTOR
 
 /*
@@ -9,3 +11,16 @@ __visible void __stack_chk_fail(void)
 }
 
 #endif
+
+/**
+ *	panic - halt the system
+ *	@fmt: The text string to print
+ *
+ *	Display a message, then perform cleanups.
+ *
+ *	This function never returns.
+ */
+void panic(const char *fmt, ...)
+{
+	while (1);
+}

@@ -33,6 +33,11 @@ struct task_struct {
 	void				*stack;
 	atomic_t			usage;
 
+#ifdef CONFIG_STACKPROTECTOR
+	/* Canary value for the -fstack-protector GCC feature: */
+	u64			stack_canary;
+#endif
+
 	/*
 	 * executable name, excluding path.
 	 *

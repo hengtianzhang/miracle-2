@@ -18,26 +18,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <linux/kbuild.h>
+#include <linux/sched.h>
+#include <linux/mm_types.h>
+#include <linux/dma-direction.h>
 
 #include <asm/smp.h>
-
-#define TSK_STACK_CANARY 1
-#define VMA_VM_MM 3
-#define MM_CONTEXT_ID 4
-
-#define DMA_TO_DEVICE 0
-#define DMA_FROM_DEVICE 1
 
 int main(void)
 {
 #ifdef CONFIG_STACKPROTECTOR
-	DEFINE(TSK_STACK_CANARY,	TSK_STACK_CANARY);
+	DEFINE(TSK_STACK_CANARY,	offsetof(struct task_struct, stack_canary));
 #endif
-	DEFINE(VMA_VM_MM,		VMA_VM_MM);
-	DEFINE(MM_CONTEXT_ID,		MM_CONTEXT_ID);
+	BLANK();
+	DEFINE(VMA_VM_MM,		offsetof(struct vm_area_struct, vm_mm));
+	BLANK();
+	DEFINE(MM_CONTEXT_ID,		offsetof(struct mm_struct, context.id.counter));
+	BLANK();
+	DEFINE(DMA_BIDIRECTIONAL,	DMA_BIDIRECTIONAL);
 	DEFINE(DMA_TO_DEVICE,		DMA_TO_DEVICE);
 	DEFINE(DMA_FROM_DEVICE,	DMA_FROM_DEVICE);
-
 	BLANK();
 	DEFINE(CPU_BOOT_STACK,	offsetof(struct secondary_data, stack));
 	DEFINE(CPU_BOOT_TASK,		offsetof(struct secondary_data, task));

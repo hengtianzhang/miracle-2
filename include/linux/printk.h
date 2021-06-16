@@ -135,4 +135,6 @@ int printk(const char *fmt, ...);
 	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
 #endif
 
+extern asmlinkage void dump_stack(void) __cold;
+
 #endif /* !__LINUX_PRINTK_H_ */

@@ -9,6 +9,7 @@
 #include <linux/log2.h>
 #include <linux/printk.h>
 #include <linux/panic.h>
+#include <linux/string.h>
 #include <linux/errno.h>
 #include <linux/err.h>
 
