@@ -6,3 +6,4 @@
 obj-y := extable.o panic.o
 
 obj-y += locking/
+obj-y += printk/

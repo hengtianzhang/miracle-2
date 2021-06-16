@@ -37,6 +37,7 @@
 #ifndef __ASSEMBLY__
 
 #include <linux/sched.h>
+#include <linux/linkage.h>
 
 /*
  * Called from the secondary holding pen, this is the secondary CPU entry point.

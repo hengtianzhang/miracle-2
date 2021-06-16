@@ -209,7 +209,7 @@
  */
 #define TEXT_TEXT							\
 		ALIGN_FUNCTION();					\
-		*(.text.hot TEXT_MAIN .text.fixup)	\
+		*(.text.hot TEXT_MAIN .text.fixup .text.unlikely)	\
 	MEM_KEEP(init.text*)						\
 
 /* sched.text is aling to function alignment to secure we have same
@@ -428,7 +428,6 @@
 #define INIT_CALLS_LEVEL(level)						\
 		__initcall##level##_start = .;				\
 		KEEP(*(.initcall##level##.init))			\
-		KEEP(*(.initcall##level##s.init))			\
 
 #define INIT_CALLS							\
 		__initcall_start = .;					\

@@ -108,6 +108,7 @@
 #ifndef __ASSEMBLY__
 
 #include <linux/bitops.h>
+#include <linux/bug.h>
 
 extern s64			memstart_addr;
 /* PHYS_OFFSET - the physical address of the start of memory. */

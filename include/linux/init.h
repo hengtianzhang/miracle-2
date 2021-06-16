@@ -94,31 +94,20 @@ extern initcall_entry_t __con_initcall_start[], __con_initcall_end[];
  * Keep main.c:initcall_level_names[] in sync.
  */
 #define pure_initcall(fn)		__define_initcall(fn, 0)
-
 #define core_initcall(fn)		__define_initcall(fn, 1)
-#define core_initcall_sync(fn)		__define_initcall(fn, 1s)
-#define postcore_initcall(fn)		__define_initcall(fn, 2)
-#define postcore_initcall_sync(fn)	__define_initcall(fn, 2s)
+#define postcore_initcall(fn)	__define_initcall(fn, 2)
 #define arch_initcall(fn)		__define_initcall(fn, 3)
-#define arch_initcall_sync(fn)		__define_initcall(fn, 3s)
 #define subsys_initcall(fn)		__define_initcall(fn, 4)
-#define subsys_initcall_sync(fn)	__define_initcall(fn, 4s)
 #define fs_initcall(fn)			__define_initcall(fn, 5)
-#define fs_initcall_sync(fn)		__define_initcall(fn, 5s)
 #define rootfs_initcall(fn)		__define_initcall(fn, rootfs)
 #define device_initcall(fn)		__define_initcall(fn, 6)
-#define device_initcall_sync(fn)	__define_initcall(fn, 6s)
 #define late_initcall(fn)		__define_initcall(fn, 7)
-#define late_initcall_sync(fn)		__define_initcall(fn, 7s)
-
-#define __initcall(fn) device_initcall(fn)
 
 #define console_initcall(fn)	___define_initcall(fn,, .con_initcall)
 
 struct obs_kernel_param {
 	const char *str;
 	int (*setup_func)(char *);
-	int early;
 };
 
 /*
@@ -127,23 +116,20 @@ struct obs_kernel_param {
  * Force the alignment so the compiler doesn't space elements of the
  * obs_kernel_param "array" too far apart in .init.setup.
  */
-#define __setup_param(str, unique_id, fn, early)			\
+#define __setup_param(str, unique_id, fn)			\
 	static const char __setup_str_##unique_id[] __initconst		\
 		__aligned(1) = str; 					\
 	static struct obs_kernel_param __setup_##unique_id		\
 		__used __section(.init.setup)				\
 		__attribute__((aligned((sizeof(s64)))))		\
-		= { __setup_str_##unique_id, fn, early }
-
-#define __setup(str, fn)						\
-	__setup_param(str, fn, fn, 0)
+		= { __setup_str_##unique_id, fn }
 
 /*
  * NOTE: fn is as per module_param, not __setup!
  * Emits warning if fn returns non-zero.
  */
 #define early_param(str, fn)						\
-	__setup_param(str, fn, fn, 1)
+	__setup_param(str, fn, fn)
 
 #define early_param_on_off(str_on, str_off, var, config)		\
 									\
@@ -154,14 +140,14 @@ struct obs_kernel_param {
 		var = 1;						\
 		return 0;						\
 	}								\
-	__setup_param(str_on, parse_##var##_on, parse_##var##_on, 1);	\
+	__setup_param(str_on, parse_##var##_on, parse_##var##_on);	\
 									\
 	static int __init parse_##var##_off(char *arg)			\
 	{								\
 		var = 0;						\
 		return 0;						\
 	}								\
-	__setup_param(str_off, parse_##var##_off, parse_##var##_off, 1)
+	__setup_param(str_off, parse_##var##_off, parse_##var##_off)
 
 /* Relies on boot_command_line being set */
 void __init parse_early_param(void);

@@ -19,7 +19,7 @@
 #define __ASM_CMPXCHG_H_
 
 #include <linux/types.h>
-#include <linux/bug.h>
+#include <linux/build_bug.h>
 
 /*
  * We need separate acquire parameters for ll/sc and lse, since the full

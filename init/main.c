@@ -9,6 +9,7 @@
  *  Simplified starting of init:  Michael A. Griffith <grif@acm.org>
  */
 
+#include <linux/kernel.h>
 #include <linux/start_kernel.h>
 #include <linux/linkage.h>
 
