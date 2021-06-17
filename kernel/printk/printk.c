@@ -16,7 +16,7 @@
  *	01Mar01 Andrew Morton
  */
 
-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+#define pr_fmt(fmt) KBUILD_BASENAME ": " fmt
 
 #include <linux/kernel.h>
 #include <linux/printk.h>

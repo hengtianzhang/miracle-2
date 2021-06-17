@@ -39,6 +39,8 @@
 #include <linux/sched.h>
 #include <linux/linkage.h>
 
+#include <asm/smp_plat.h>
+
 /*
  * Called from the secondary holding pen, this is the secondary CPU entry point.
  */

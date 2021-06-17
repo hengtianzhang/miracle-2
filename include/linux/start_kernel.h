@@ -5,6 +5,8 @@
 #include <linux/linkage.h>
 #include <linux/init.h>
 
+extern bool early_boot_irqs_disabled;
+
 /* Define the prototype for start_kernel here, rather than cluttering
    up something else. */
 

@@ -9,6 +9,9 @@
 #include <linux/string.h>
 #include <linux/kernel.h>
 
+#define DECLARE_BITMAP(name,bits) \
+	u64 name[BITS_TO_LONGS(bits)]
+
 /*
  * bitmaps provide bit arrays that consume one or more unsigned
  * longs.  The bitmap interface and available operations are listed
@@ -58,9 +61,7 @@
  *  bitmap_onto(dst, orig, relmap, nbits)       *dst = orig relative to relmap
  *  bitmap_fold(dst, orig, sz, nbits)           dst bits = orig bits mod sz
  *  bitmap_parse(buf, buflen, dst, nbits)       Parse bitmap dst from kernel buf
- *  bitmap_parse_user(ubuf, ulen, dst, nbits)   Parse bitmap dst from user buf
  *  bitmap_parselist(buf, dst, nbits)           Parse bitmap dst from kernel buf
- *  bitmap_parselist_user(buf, dst, nbits)      Parse bitmap dst from user buf
  *  bitmap_find_free_region(bitmap, bits, order)  Find and allocate bit region
  *  bitmap_release_region(bitmap, pos, order)   Free specified bit region
  *  bitmap_allocate_region(bitmap, pos, order)  Allocate specified bit region
