@@ -21,6 +21,8 @@
 
 #ifndef __ASSEMBLY__
 
+extern bool rodata_full;
+
 /*
  * TCR.T0SZ value to use when the ID map is active. Usually equals
  * TCR_T0SZ(VA_BITS), unless system RAM is positioned very high in

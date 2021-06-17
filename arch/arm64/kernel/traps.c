@@ -1,4 +1,7 @@
 /*
+ * Based on arch/arm/kernel/traps.c
+ *
+ * Copyright (C) 1995-2009 Russell King
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -13,27 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ASM_MMU_H_
-#define __ASM_MMU_H_
+#include <linux/kernel.h>
 
-#include <linux/atomic.h>
+#include <asm/pgtable.h>
 
-#ifndef __ASSEMBLY__
+void __pte_error(const char *file, int line, u64 val)
+{
+	pr_err("%s:%d: bad pte %016llx.\n", file, line, val);
+}
 
-typedef struct {
-	atomic64_t id;
-	u64		flags;
-} mm_context_t;
+void __pmd_error(const char *file, int line, u64 val)
+{
+	pr_err("%s:%d: bad pmd %016llx.\n", file, line, val);
+}
 
-/*
- * This macro is only used by the TLBI code, which cannot race with an
- * ASID change and therefore doesn't need to reload the counter using
- * atomic64_read.
- */
-#define ASID(mm)	((mm)->context.id.counter & 0xffff)
+void __pud_error(const char *file, int line, u64 val)
+{
+	pr_err("%s:%d: bad pud %016llx.\n", file, line, val);
+}
 
-#define INIT_MM_CONTEXT(name)	\
-	.pgd = init_pg_dir,
+void __pgd_error(const char *file, int line, u64 val)
+{
+	pr_err("%s:%d: bad pgd %016llx.\n", file, line, val);
+}
 
-#endif /* !__ASSEMBLY__ */
-#endif /* !__ASM_MMU_H_ */

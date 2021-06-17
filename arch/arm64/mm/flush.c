@@ -1,4 +1,7 @@
 /*
+ * Based on arch/arm/mm/flush.c
+ *
+ * Copyright (C) 1995-2002 Russell King
  * Copyright (C) 2012 ARM Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -13,27 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ASM_MMU_H_
-#define __ASM_MMU_H_
+#include <asm/pgtable.h>
 
-#include <linux/atomic.h>
+void __sync_icache_dcache(pte_t pte)
+{
 
-#ifndef __ASSEMBLY__
-
-typedef struct {
-	atomic64_t id;
-	u64		flags;
-} mm_context_t;
-
-/*
- * This macro is only used by the TLBI code, which cannot race with an
- * ASID change and therefore doesn't need to reload the counter using
- * atomic64_read.
- */
-#define ASID(mm)	((mm)->context.id.counter & 0xffff)
-
-#define INIT_MM_CONTEXT(name)	\
-	.pgd = init_pg_dir,
-
-#endif /* !__ASSEMBLY__ */
-#endif /* !__ASM_MMU_H_ */
+}

@@ -11,6 +11,7 @@ extern void clear_page(void *to);
 extern int pfn_valid(u64 pfn);
 
 #include <asm/memory.h>
+#include <asm/pgtable-types.h>
 
 #endif /* !__ASSEMBLY__ */
 

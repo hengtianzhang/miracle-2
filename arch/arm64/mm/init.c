@@ -7,6 +7,7 @@
  */
 
 #include <linux/cache.h>
+#include <linux/memblock.h>
 
 #include <asm/page.h>
 #include <asm/memory.h>
@@ -20,5 +21,10 @@ s64 memstart_addr __ro_after_init = -1;
 
 int pfn_valid(u64 pfn)
 {
-	return 1;
+	phys_addr_t addr = pfn << PAGE_SHIFT;
+
+	if ((addr >> PAGE_SHIFT) != pfn)
+		return 0;
+
+	return memblock_is_map_memory(addr);
 }
