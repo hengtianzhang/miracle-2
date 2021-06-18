@@ -7,6 +7,7 @@
 #include <linux/page-flags-layout.h>
 #include <linux/page-flags.h>
 #include <linux/page_ref.h>
+#include <linux/gfp.h>
 
 #include <asm/page.h>
 
@@ -42,6 +43,23 @@ static inline void set_compound_order(struct page *page, unsigned int order)
 	page[1].compound_order = order;
 }
 
+#define page_private(page)		((page)->private)
+#define set_page_private(page, v)	((page)->private = (v))
+
+/*
+ * This function returns the order of a free page in the buddy system. In
+ * general, page_zone(page)->lock must be held by the caller to prevent the
+ * page from being allocated in parallel and returning garbage as the order.
+ * If a caller does not hold page_zone(page)->lock, it must guarantee that the
+ * page cannot be allocated or merged in parallel. Alternatively, it must
+ * handle invalid values gracefully, and use page_order_unsafe() below.
+ */
+static inline unsigned int page_order(struct page *page)
+{
+	/* PageBuddy() must be checked by the caller */
+	return page_private(page);
+}
+
 static inline int put_page_testzero(struct page *page)
 {
 	BUG_ON(page_ref_count(page) == 0);
@@ -60,6 +78,12 @@ static inline int get_page_unless_zero(struct page *page)
 	return page_ref_add_unless(page, 1, 0);
 }
 
+static inline struct page *virt_to_head_page(const void *x)
+{
+	struct page *page = virt_to_page(x);
+
+	return compound_head(page);
+}
 
 static inline void get_page(struct page *page)
 {
@@ -106,5 +130,30 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
 }
 
 #define page_address(page) page_to_virt(page)
+
+static inline void __free_reserved_page(struct page *page)
+{
+	ClearPageReserved(page);
+	init_page_count(page);
+	__free_page(page);
+}
+
+static inline void free_reserved_page(struct page *page)
+{
+	__free_reserved_page(page);
+}
+
+static inline void mark_page_reserved(struct page *page)
+{
+	SetPageReserved(page);
+}
+
+void arch_free_page(struct page *page, int order);
+
+void memblock_free_pages(struct page *page, u64 pfn, unsigned int order);
+u64 free_reserved_area(void *start, void *end, int poison, const char *s);
+
+bool is_free_buddy_page(struct page *page);
+void zone_pcp_reset(struct zone *zone);
 
 #endif /* !__LINUX_PAGE_H_ */

@@ -173,7 +173,6 @@ void memmap_init_zone(u64 size, u64 zone, u64 start_pfn);
 void memmap_init(u64 size, u64 zone, u64 start_pfn);
 void free_area_init_node(u64 *zones_size, u64 node_start_pfn,
 								u64 *zholes_size);
-void free_area_init_nodes(u64 *max_zone_pfn);
 
 extern struct pglist_data *first_online_pgdat(void);
 extern struct pglist_data *next_online_pgdat(struct pglist_data *pgdat);
@@ -208,6 +207,7 @@ extern struct zone *next_zone(struct zone *zone);
 			; /* do nothing */		\
 		else
 
+void free_area_init_nodes(u64 *max_zone_pfn);
 void build_all_zone(pg_data_t *pgdat);
 void setup_per_cpu_pageset(void);
 

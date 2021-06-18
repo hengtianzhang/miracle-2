@@ -22,7 +22,7 @@ struct page {
 	union {
 		struct {
 			struct list_head lru;
-			u64 order;
+			u64 private;
 		};
 		struct {	/* Tail pages of compound page */
 			u64 compound_head;	/* Bit zero is set */

@@ -43,5 +43,7 @@
 /* to align the pointer to the (next) page boundary */
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
+#define pfn_valid_within(pfn) pfn_valid(pfn)
+
 #endif /* __KERNEL__ */
 #endif /* !__LINUX_MM_H_ */

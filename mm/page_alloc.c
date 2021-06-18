@@ -27,6 +27,11 @@
 #include <linux/percpu.h>
 #include <linux/page.h>
 #include <linux/cpumask.h>
+#include <linux/gfp.h>
+#include <linux/prefetch.h>
+#include <linux/spinlock.h>
+
+#include "internal.h"
 
 u64 max_pfn;
 struct pglist_data node_data __read_mostly;
@@ -46,6 +51,483 @@ static char * const zone_names[MAX_NR_ZONES] = {
 	 "Normal",
 	 "Movable",
 };
+
+static void bad_page(struct page *page, const char *reason,
+		u64 bad_flags)
+{
+	pr_alert("BUG: Bad page state pfn:%05llx %s\n", page_to_pfn(page), reason);
+	bad_flags &= page->flags;
+	if (bad_flags)
+		pr_alert("bad because of flags: %#llx(%pGp)\n",
+						bad_flags, &bad_flags);
+}
+
+static int free_tail_pages_check(struct page *head_page, struct page *page)
+{
+	int ret = 1;
+
+	/*
+	 * We rely page->lru.next never has bit 0 set, unless the page
+	 * is PageTail(). Let's make sure that's true even for poisoned ->lru.
+	 */
+	BUILD_BUG_ON((u64)LIST_POISON1 & 1);
+
+	if (unlikely(!PageTail(page))) {
+		bad_page(page, "PageTail not set", 0);
+		goto out;
+	}
+	if (unlikely(compound_head(page) != head_page)) {
+		bad_page(page, "compound_head not consistent", 0);
+		goto out;
+	}
+	ret = 0;
+out:
+	clear_compound_head(page);
+	return ret;
+}
+
+/*
+ * A bad page could be due to a number of fields. Instead of multiple branches,
+ * try and check multiple fields with one check. The caller must do a detailed
+ * check if necessary.
+ */
+static inline bool page_expected_state(struct page *page,
+					u64 check_flags)
+{
+	if (unlikely(page_ref_count(page) | (page->flags & check_flags)))
+		return false;
+
+	return true;
+}
+
+static void free_pages_check_bad(struct page *page)
+{
+	const char *bad_reason;
+	u64 bad_flags;
+
+	bad_reason = NULL;
+	bad_flags = 0;
+
+	if (unlikely(page_ref_count(page) != 0))
+		bad_reason = "nonzero _refcount";
+	if (unlikely(page->flags & PAGE_FLAGS_CHECK_AT_FREE)) {
+		bad_reason = "PAGE_FLAGS_CHECK_AT_FREE flag(s) set";
+		bad_flags = PAGE_FLAGS_CHECK_AT_FREE;
+	}
+
+	bad_page(page, bad_reason, bad_flags);
+}
+
+
+static inline int free_pages_check(struct page *page)
+{
+	if (likely(page_expected_state(page, PAGE_FLAGS_CHECK_AT_FREE)))
+		return 0;
+
+	/* Something has gone sideways, find it */
+	free_pages_check_bad(page);
+	return 1;
+}
+
+void __weak arch_free_page(struct page *page, int order)
+{
+
+}
+
+static __always_inline bool free_pages_prepare(struct page *page,
+					unsigned int order, bool check_free)
+{
+	int bad = 0;
+
+	BUG_ON(PageTail(page));
+
+	/*
+	 * Check tail pages before head page information is cleared to
+	 * avoid checking PageCompound for order-0 pages.
+	 */
+	if (unlikely(order)) {
+		bool compound = PageCompound(page);
+		int i;
+
+		BUG_ON(compound && compound_order(page) != order);
+
+		for (i = 1; i < (1 << order); i++) {
+			if (compound)
+				bad += free_tail_pages_check(page, page + i);
+			if (unlikely(free_pages_check(page + i))) {
+				bad++;
+				continue;
+			}
+			(page + i)->flags &= ~PAGE_FLAGS_CHECK_AT_PREP;
+		}
+	}
+	if (check_free)
+		bad += free_pages_check(page);
+	if (bad)
+		return false;
+
+	page->flags &= ~PAGE_FLAGS_CHECK_AT_PREP;
+
+	arch_free_page(page, order);
+
+	return true;
+}
+
+static bool free_pcp_prepare(struct page *page)
+{
+	return free_pages_prepare(page, 0, false);
+}
+
+static bool free_unref_page_prepare(struct page *page, u64 pfn)
+{
+	if (!free_pcp_prepare(page))
+		return false;
+
+	return true;
+}
+
+static bool bulkfree_pcp_prepare(struct page *page)
+{
+	return free_pages_check(page);
+}
+
+static inline void prefetch_buddy(struct page *page)
+{
+	u64 pfn = page_to_pfn(page);
+	u64 buddy_pfn = __find_buddy_pfn(pfn, 0);
+	struct page *buddy = page + (buddy_pfn - pfn);
+
+	prefetch(buddy);
+}
+
+/*
+ * This function checks whether a page is free && is the buddy
+ * we can coalesce a page and its buddy if
+ * (a) the buddy is not in a hole (check before calling!) &&
+ * (b) the buddy is in the buddy system &&
+ * (c) a page and its buddy have the same order &&
+ * (d) a page and its buddy are in the same zone.
+ *
+ * For recording whether a page is in the buddy system, we set PageBuddy.
+ * Setting, clearing, and testing PageBuddy is serialized by zone->lock.
+ *
+ * For recording page's order, we use page_private(page).
+ */
+static inline int page_is_buddy(struct page *page, struct page *buddy,
+							unsigned int order)
+{
+	if (PageBuddy(buddy) && page_order(buddy) == order) {
+		/*
+		 * zone check is done late to avoid uselessly
+		 * calculating zone/node ids for pages that could
+		 * never merge.
+		 */
+		if (page_zone_id(page) != page_zone_id(buddy))
+			return 0;
+
+		BUG_ON(page_count(buddy) != 0);
+
+		return 1;
+	}
+	return 0;
+}
+
+static inline void set_page_order(struct page *page, unsigned int order)
+{
+	set_page_private(page, order);
+	__SetPageBuddy(page);
+}
+
+static inline void rmv_page_order(struct page *page)
+{
+	__ClearPageBuddy(page);
+	set_page_private(page, 0);
+}
+
+static inline void __free_one_page(struct page *page,
+		u64 pfn,
+		struct zone *zone, unsigned int order)
+{
+	u64 combined_pfn;
+	u64 uninitialized_var(buddy_pfn);
+	struct page *buddy;
+	unsigned int max_order;
+
+	max_order = min_t(unsigned int, MAX_ORDER, pageblock_order + 1);
+
+	BUG_ON(!zone_is_initialized(zone));
+	BUG_ON(page->flags & PAGE_FLAGS_CHECK_AT_PREP);
+
+	BUG_ON(pfn & ((1 << order) - 1));
+
+continue_merging:
+	while (order < max_order - 1) {
+		buddy_pfn = __find_buddy_pfn(pfn, order);
+		buddy = page + (buddy_pfn - pfn);
+
+		if (!pfn_valid_within(buddy_pfn))
+			goto done_merging;
+		if (!page_is_buddy(page, buddy, order))
+			goto done_merging;
+
+		list_del(&buddy->lru);
+		zone->free_area[order].nr_free--;
+		rmv_page_order(buddy);
+
+		combined_pfn = buddy_pfn & pfn;
+		page = page + (combined_pfn - pfn);
+		pfn = combined_pfn;
+		order++;
+	}
+	if (max_order < MAX_ORDER) {
+		max_order++;
+		goto continue_merging;
+	}
+
+done_merging:
+	set_page_order(page, order);
+
+	/*
+	 * If this is not the largest possible page, check if the buddy
+	 * of the next-highest order is free. If it is, it's possible
+	 * that pages are being freed that will coalesce soon. In case,
+	 * that is happening, add the free page to the tail of the list
+	 * so it's less likely to be used soon and more likely to be merged
+	 * as a higher order page
+	 */
+	if ((order < MAX_ORDER-2) && pfn_valid_within(buddy_pfn)) {
+		struct page *higher_page, *higher_buddy;
+		combined_pfn = buddy_pfn & pfn;
+		higher_page = page + (combined_pfn - pfn);
+		buddy_pfn = __find_buddy_pfn(combined_pfn, order + 1);
+		higher_buddy = higher_page + (buddy_pfn - combined_pfn);
+		if (pfn_valid_within(buddy_pfn) &&
+		    page_is_buddy(higher_page, higher_buddy, order + 1)) {
+			list_add_tail(&page->lru,
+				&zone->free_area[order].free_list);
+			goto out;
+		}
+	}
+
+	list_add(&page->lru, &zone->free_area[order].free_list);
+out:
+	zone->free_area[order].nr_free++;
+}
+
+/*
+ * Frees a number of pages from the PCP lists
+ * Assumes all pages on list are in same zone, and of same order.
+ * count is the number of pages to free.
+ *
+ * If the zone was previously in an "all pages pinned" state then look to
+ * see if this freeing clears that state.
+ *
+ * And clear the zone's pages_scanned counter, to hold off the "all pages are
+ * pinned" detection logic.
+ */
+static void free_pcppages_bulk(struct zone *zone, int count,
+					struct per_cpu_pages *pcp)
+{
+	int batch_free = 0;
+	int prefetch_nr = 0;
+	struct page *page, *tmp;
+	LIST_HEAD(head);
+
+	while (count) {
+		struct list_head *list;
+
+		/*
+		 * Remove pages from lists in a round-robin fashion. A
+		 * batch_free count is maintained that is incremented when an
+		 * empty list is encountered.  This is so more pages are freed
+		 * off fuller lists instead of spinning excessively around empty
+		 * lists
+		 */
+		do {
+			batch_free++;
+			list = &pcp->lists;
+		} while (list_empty(list));
+
+		do {
+			page = list_last_entry(list, struct page, lru);
+			/* must delete to avoid corrupting pcp list */
+			list_del(&page->lru);
+			pcp->count--;
+
+			if (bulkfree_pcp_prepare(page))
+				continue;
+
+			list_add_tail(&page->lru, &head);
+
+			/*
+			 * We are going to put the page back to the global
+			 * pool, prefetch its buddy to speed up later access
+			 * under zone->lock. It is believed the overhead of
+			 * an additional test and calculating buddy_pfn here
+			 * can be offset by reduced memory latency later. To
+			 * avoid excessive prefetching due to large count, only
+			 * prefetch buddy for the first pcp->batch nr of pages.
+			 */
+			if (prefetch_nr++ < pcp->batch)
+				prefetch_buddy(page);
+		} while (--count && --batch_free && !list_empty(list));
+	}
+
+	spin_lock(&zone->lock);
+
+	/*
+	 * Use safe version since after __free_one_page(),
+	 * page->lru.next will not point to original list.
+	 */
+	list_for_each_entry_safe(page, tmp, &head, lru)
+		__free_one_page(page, page_to_pfn(page), zone, 0);
+
+	spin_unlock(&zone->lock);
+}
+
+static void free_unref_page_commit(struct page *page, u64 pfn)
+{
+	struct zone *zone = page_zone(page);
+	struct per_cpu_pages *pcp;
+
+	pcp = &this_cpu_ptr(zone->pageset)->pcp;
+	list_add(&page->lru, &pcp->lists);
+	pcp->count++;
+
+	if (pcp->count >= pcp->high) {
+		u64 batch = READ_ONCE(pcp->batch);
+		free_pcppages_bulk(zone, batch, pcp);
+	}
+}
+
+/*
+ * Free a 0-order page
+ */
+void free_unref_page(struct page *page)
+{
+	u64 flags;
+	u64 pfn = page_to_pfn(page);
+
+	if (!free_unref_page_prepare(page, pfn))
+		return;
+
+	local_irq_save(flags);
+	free_unref_page_commit(page, pfn);
+	local_irq_restore(flags);
+}
+
+static void free_one_page(struct zone *zone,
+				struct page *page, u64 pfn,
+				unsigned int order)
+{
+	spin_lock(&zone->lock);
+	__free_one_page(page, pfn, zone, order);
+	spin_unlock(&zone->lock);
+}
+
+static void __free_pages_ok(struct page *page, unsigned int order)
+{
+	u64 flags;
+	u64 pfn = page_to_pfn(page);
+
+	if (!free_pages_prepare(page, order, true))
+		return;
+
+	local_irq_save(flags);
+	free_one_page(page_zone(page), page, pfn, order);
+	local_irq_restore(flags);
+}
+
+static inline void free_the_page(struct page *page, unsigned int order)
+{
+	if (order == 0)		/* Via pcp? */
+		free_unref_page(page);
+	else
+		__free_pages_ok(page, order);
+}
+
+void __free_pages(struct page *page, unsigned int order)
+{
+	if (put_page_testzero(page))
+		free_the_page(page, order);
+}
+
+void free_pages(u64 addr, unsigned int order)
+{
+	if (addr != 0) {
+		BUG_ON(!virt_addr_valid((void *)addr));
+		__free_pages(virt_to_page((void *)addr), order);
+	}
+}
+
+/*
+ * Frees a page fragment allocated out of either a compound or order 0 page.
+ */
+void page_frag_free(void *addr)
+{
+	struct page *page = virt_to_head_page(addr);
+
+	if (unlikely(put_page_testzero(page)))
+		free_the_page(page, compound_order(page));
+}
+
+static void __init __free_pages_boot_core(struct page *page, unsigned int order)
+{
+	unsigned int nr_pages = 1 << order;
+	struct page *p = page;
+	unsigned int loop;
+
+	prefetchw(p);
+	for (loop = 0; loop < (nr_pages - 1); loop++, p++) {
+		prefetchw(p + 1);
+		__ClearPageReserved(p);
+		set_page_count(p, 0);
+	}
+	__ClearPageReserved(p);
+	set_page_count(p, 0);
+
+	atomic_long_add(nr_pages, &page_zone(page)->managed_pages);
+	set_page_refcounted(page);
+	__free_pages(page, order);
+}
+
+void __init memblock_free_pages(struct page *page, u64 pfn,
+							unsigned int order)
+{
+	return __free_pages_boot_core(page, order);
+}
+
+u64 free_reserved_area(void *start, void *end, int poison, const char *s)
+{
+	void *pos;
+	u64 pages = 0;
+
+	start = (void *)PAGE_ALIGN((u64)start);
+	end = (void *)((u64)end & PAGE_MASK);
+	for (pos = start; pos < end; pos += PAGE_SIZE, pages++) {
+		struct page *page = virt_to_page(pos);
+		void *direct_map_addr;
+
+		/*
+		 * 'direct_map_addr' might be different from 'pos'
+		 * because some architectures' virt_to_page()
+		 * work with aliases.  Getting the direct map
+		 * address ensures that we get a _writeable_
+		 * alias for the memset().
+		 */
+		direct_map_addr = page_address(page);
+		if ((unsigned int)poison <= 0xFF)
+			memset(direct_map_addr, poison, PAGE_SIZE);
+
+		free_reserved_page(page);
+	}
+
+	if (pages && s)
+		pr_info("Freeing %s memory: %lldK\n",
+			s, pages << (PAGE_SHIFT - 10));
+
+	return pages;
+}
 
 /* Find the lowest pfn for a node */
 static u64 __init find_min_pfn_for_node(void)
@@ -651,4 +1133,36 @@ void __init free_area_init_nodes(u64 *max_zone_pfn)
 	zero_resv_unavail();
 
 	free_area_init_node(NULL, find_min_pfn_for_node(), NULL);
+}
+
+void zone_pcp_reset(struct zone *zone)
+{
+	u64 flags;
+
+	/* avoid races with drain_pages()  */
+	local_irq_save(flags);
+	if (zone->pageset != &boot_pageset) {
+		free_percpu(zone->pageset);
+		zone->pageset = &boot_pageset;
+	}
+	local_irq_restore(flags);
+}
+
+bool is_free_buddy_page(struct page *page)
+{
+	struct zone *zone = page_zone(page);
+	u64 pfn = page_to_pfn(page);
+	u64 flags;
+	unsigned int order;
+
+	spin_lock_irqsave(&zone->lock, flags);
+	for (order = 0; order < MAX_ORDER; order++) {
+		struct page *page_head = page - (pfn & ((1 << order) - 1));
+
+		if (PageBuddy(page_head) && page_order(page_head) >= order)
+			break;
+	}
+	spin_unlock_irqrestore(&zone->lock, flags);
+
+	return order < MAX_ORDER;
 }
