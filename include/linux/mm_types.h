@@ -5,6 +5,7 @@
 #include <linux/types.h>
 #include <linux/rbtree.h>
 #include <linux/atomic.h>
+#include <linux/list.h>
 
 #include <asm/page.h>
 #include <asm/mmu.h>
@@ -17,6 +18,20 @@
 
 struct page {
 	u64 flags;
+
+	union {
+		struct {
+			struct list_head lru;
+			u64 order;
+		};
+		struct {	/* Tail pages of compound page */
+			u64 compound_head;	/* Bit zero is set */
+			unsigned char compound_order;
+		};
+	};
+
+	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
+	atomic_t _refcount;
 } _struct_page_alignment;
 
 /*

@@ -7,4 +7,7 @@
 
 #include <asm/percpu.h>
 
+#define alloc_percpu(type) NULL
+#define free_percpu(data)
+
 #endif /* !__LINUX_PERCPU_H_ */

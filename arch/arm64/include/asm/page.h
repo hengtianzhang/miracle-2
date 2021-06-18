@@ -5,6 +5,8 @@
 
 #ifndef __ASSEMBLY__
 
+#include <linux/types.h>
+
 extern void copy_page(void *to, const void *from);
 extern void clear_page(void *to);
 

@@ -906,6 +906,36 @@ void __init_memblock __next_mem_range_rev(u64 *idx,
 	*idx = ULLONG_MAX;
 }
 
+/**
+ * __next_reserved_mem_region - next function for for_each_reserved_region()
+ * @idx: pointer to u64 loop variable
+ * @out_start: ptr to phys_addr_t for start address of the region, can be %NULL
+ * @out_end: ptr to phys_addr_t for end address of the region, can be %NULL
+ *
+ * Iterate over all reserved memory regions.
+ */
+void __init_memblock __next_mem_pfn_range(u64 *idx,
+					   phys_addr_t *out_start_pfn,
+					   phys_addr_t *out_end_pfn)
+{
+	struct memblock_type *type = &memblock.memory;
+
+	if (*idx < type->cnt) {
+		struct memblock_region *r = &type->regions[*idx];
+
+		if (out_start_pfn)
+			*out_start_pfn = PFN_UP(r->base);
+		if (out_end_pfn)
+			*out_end_pfn = PFN_DOWN(r->base + r->size);
+
+		*idx += 1;
+		return;
+	}
+
+	/* signal end of iteration */
+	*idx = ULLONG_MAX;
+}
+
 static phys_addr_t __init __memblock_alloc_range(phys_addr_t size,
 					phys_addr_t align, phys_addr_t start,
 					phys_addr_t end,

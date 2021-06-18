@@ -6,9 +6,18 @@
  */
 
 #define __GENERATING_BOUNDS_H
+/* Include headers that define the enum constants of interest */
+#include <linux/page-flags.h>
+#include <linux/mmzone.h>
+#include <linux/kbuild.h>
+#include <linux/log2.h>
 
 int main(void)
 {
+	DEFINE(NR_PAGEFLAGS, __NR_PAGEFLAGS);
+	DEFINE(MAX_NR_ZONES, __MAX_NR_ZONES);
+	DEFINE(NR_CPUS_BITS, ilog2(CONFIG_NR_CPUS));
+
 	return 0;
 }
 

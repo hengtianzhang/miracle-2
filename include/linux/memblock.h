@@ -188,24 +188,6 @@ void __next_mem_range(u64 *idx, enum memblock_flags flags,
 			      p_start, p_end))
 
 /**
- * for_each_mem_range - iterate through memblock areas from type_a and not
- * included in type_b. Or just type_a if type_b is NULL.
- * @i: u64 used as loop variable
- * @type_a: ptr to memblock_type to iterate
- * @type_b: ptr to memblock_type which excludes from the iteration
- * @flags: pick from blocks based on memory attributes
- * @p_start: ptr to phys_addr_t for start address of the range, can be %NULL
- * @p_end: ptr to phys_addr_t for end address of the range, can be %NULL
- */
-#define for_each_mem_range(i, type_a, type_b, flags,		\
-			   p_start, p_end)			\
-	for (i = 0, __next_mem_range(&i, flags, type_a, type_b,	\
-				     p_start, p_end);		\
-	     i != (u64)ULLONG_MAX;					\
-	     __next_mem_range(&i, flags, type_a, type_b,		\
-			      p_start, p_end))
-
-/**
  * for_each_free_mem_range - iterate through free memblock areas
  * @i: u64 used as loop variable
  * @flags: pick from blocks based on memory attributes
@@ -284,6 +266,13 @@ void __next_reserved_mem_region(u64 *idx,
 	for (i = 0UL, __next_reserved_mem_region(&i, p_start, p_end);	\
 	     i != (u64)ULLONG_MAX;					\
 	     __next_reserved_mem_region(&i, p_start, p_end))
+
+void __next_mem_pfn_range(u64 *idx, phys_addr_t *out_start_pfn,
+			  phys_addr_t *out_end_pfn);
+
+#define for_each_mem_pfn_range(i, p_start, p_end)		\
+	for (i = -1, __next_mem_pfn_range(&i, p_start, p_end); \
+	     i >= 0; __next_mem_pfn_range(&i, p_start, p_end))
 
 enum memblock_flags choose_memblock_flags(void);
 bool memblock_overlaps_region(struct memblock_type *type,

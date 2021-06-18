@@ -22,24 +22,9 @@
 #include <asm/pgtable-prot.h>
 #include <asm/tlbflush.h>
 
-/*
- * VMALLOC range.
- *
- * VMALLOC_START: beginning of the kernel vmalloc space
- * VMALLOC_END: extends to the available space below vmmemmap, PCI I/O space
- *	and fixed mappings
- */
-#define VMALLOC_START		(VA_START)
-#define VMALLOC_END		(PAGE_OFFSET - PUD_SIZE - VMEMMAP_SIZE - SZ_64K)
-
-#define vmemmap			((struct page *)VMEMMAP_START - (memstart_addr >> PAGE_SHIFT))
-
-#define FIRST_USER_ADDRESS	0UL
-
 #ifndef __ASSEMBLY__
 
 #include <linux/compiler.h>
-#include <linux/mm_types.h>
 
 extern void __pte_error(const char *file, int line, u64 val);
 extern void __pmd_error(const char *file, int line, u64 val);
