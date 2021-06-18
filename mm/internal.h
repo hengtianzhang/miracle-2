@@ -11,6 +11,10 @@
 #ifndef __MM_INTERNAL_H_
 #define __MM_INTERNAL_H_
 
+struct alloc_context {
+	enum zone_type zoneidx;
+};
+
 static inline u64
 __find_buddy_pfn(u64 page_pfn, unsigned int order)
 {

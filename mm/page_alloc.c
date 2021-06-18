@@ -134,6 +134,11 @@ void __weak arch_free_page(struct page *page, int order)
 
 }
 
+void __weak arch_alloc_page(struct page *page, int order)
+{
+
+}
+
 static __always_inline bool free_pages_prepare(struct page *page,
 					unsigned int order, bool check_free)
 {
@@ -436,6 +441,341 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 	local_irq_save(flags);
 	free_one_page(page_zone(page), page, pfn, order);
 	local_irq_restore(flags);
+}
+
+static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
+		struct alloc_context *ac)
+{
+	ac->zoneidx = gfp_zone(gfp_mask);
+
+	return true;
+}
+
+static inline struct page *
+__alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
+						struct alloc_context *ac)
+{
+	return NULL;
+}
+
+static inline void expand(struct zone *zone, struct page *page,
+	int low, int high, struct free_area *area)
+{
+	u64 size = 1 << high;
+
+	while (high > low) {
+		area--;
+		high--;
+		size >>= 1;
+
+		list_add(&page[size].lru, &area->free_list);
+		area->nr_free++;
+		set_page_order(&page[size], high);
+	}
+}
+
+static __always_inline
+struct page *__rmqueue_smallest(struct zone *zone, unsigned int order)
+{
+	unsigned int current_order;
+	struct free_area *area;
+	struct page *page;
+
+	/* Find a page of the appropriate size in the preferred list */
+	for (current_order = order; current_order < MAX_ORDER; ++current_order) {
+		area = &(zone->free_area[current_order]);
+		page = list_first_entry_or_null(&area->free_list,
+							struct page, lru);
+		if (!page)
+			continue;
+		list_del(&page->lru);
+		rmv_page_order(page);
+		area->nr_free--;
+		expand(zone, page, order, current_order, area);
+
+		return page;
+	}
+
+	return NULL;
+}
+
+static __always_inline struct page *
+__rmqueue(struct zone *zone, unsigned int order,
+						gfp_t gfp_flags)
+{
+	struct page *page;
+
+	page = __rmqueue_smallest(zone, order);
+	if (unlikely(!page))
+		return NULL;
+
+	return page;
+}
+
+static void check_new_page_bad(struct page *page)
+{
+	const char *bad_reason = NULL;
+	u64 bad_flags = 0;
+
+	if (unlikely(page_ref_count(page) != 0))
+		bad_reason = "nonzero _count";
+	if (unlikely(page->flags & __PG_HWPOISON)) {
+		bad_reason = "HWPoisoned (hardware-corrupted)";
+		bad_flags = __PG_HWPOISON;
+
+		return;
+	}
+	if (unlikely(page->flags & PAGE_FLAGS_CHECK_AT_PREP)) {
+		bad_reason = "PAGE_FLAGS_CHECK_AT_PREP flag set";
+		bad_flags = PAGE_FLAGS_CHECK_AT_PREP;
+	}
+
+	bad_page(page, bad_reason, bad_flags);
+}
+
+/*
+ * This page is about to be returned from the page allocator
+ */
+static inline int check_new_page(struct page *page)
+{
+	if (likely(page_expected_state(page,
+				PAGE_FLAGS_CHECK_AT_PREP|__PG_HWPOISON)))
+		return 0;
+
+	check_new_page_bad(page);
+	return 1;
+}
+
+static bool check_new_pages(struct page *page, unsigned int order)
+{
+	int i;
+	for (i = 0; i < (1 << order); i++) {
+		struct page *p = page + i;
+
+		if (unlikely(check_new_page(p)))
+			return true;
+	}
+
+	return false;
+}
+
+static bool check_pcp_refill(struct page *page)
+{
+	return check_new_page(page);
+}
+static bool check_new_pcp(struct page *page)
+{
+	return false;
+}
+
+static int rmqueue_bulk(struct zone *zone, unsigned int order,
+			u64 count, struct list_head *list,
+			gfp_t gfp_flags)
+{
+	int i, alloced = 0;
+
+	spin_lock(&zone->lock);
+	for (i = 0; i < count; ++i) {
+		struct page *page = __rmqueue(zone, order, gfp_flags);
+		if (unlikely(page == NULL))
+			break;
+
+		if (unlikely(check_pcp_refill(page)))
+			continue;
+
+		/*
+		 * Split buddy pages returned by expand() are received here in
+		 * physical page order. The page is added to the tail of
+		 * caller's list. From the callers perspective, the linked list
+		 * is ordered by page number under some conditions. This is
+		 * useful for IO devices that can forward direction from the
+		 * head, thus also in the physical page order. This is useful
+		 * for IO devices that can merge IO requests if the physical
+		 * pages are ordered properly.
+		 */
+		list_add_tail(&page->lru, list);
+		alloced++;
+	}
+
+	spin_unlock(&zone->lock);
+
+	return alloced;
+}
+
+/* Remove page from the per-cpu list, caller must protect the list */
+static struct page *__rmqueue_pcplist(struct zone *zone,
+			gfp_t gfp_flags,
+			struct per_cpu_pages *pcp,
+			struct list_head *list)
+{
+	struct page *page;
+
+	do {
+		if (list_empty(list)) {
+			pcp->count += rmqueue_bulk(zone, 0,
+					pcp->batch, list, gfp_flags);
+			if (unlikely(list_empty(list)))
+				return NULL;
+		}
+
+		page = list_first_entry(list, struct page, lru);
+		list_del(&page->lru);
+		pcp->count--;
+	} while (check_new_pcp(page));
+
+	return page;
+}
+
+/* Lock and remove page from the per-cpu list */
+static struct page *rmqueue_pcplist(struct zone *zone, unsigned int order,
+			gfp_t gfp_flags)
+{
+	struct per_cpu_pages *pcp;
+	struct list_head *list;
+	struct page *page;
+	u64 flags;
+
+	local_irq_save(flags);
+	pcp = &this_cpu_ptr(zone->pageset)->pcp;
+	list = &pcp->lists;
+	page = __rmqueue_pcplist(zone, gfp_flags, pcp, list);
+	local_irq_restore(flags);
+
+	return page;
+}
+
+static inline
+struct page *rmqueue(struct zone *zone, unsigned int order,
+			gfp_t gfp_flags)
+{
+	u64 flags;
+	struct page *page;
+
+	if (likely(order == 0)) {
+		page = rmqueue_pcplist(zone, order, gfp_flags);
+		goto out;
+	}
+
+	spin_lock_irqsave(&zone->lock, flags);
+
+	do {
+		page = NULL;
+		if (!page)
+			page = __rmqueue(zone, order, gfp_flags);
+	} while (page && check_new_pages(page, order));
+	spin_unlock(&zone->lock);
+	if (!page)
+		goto failed;
+
+	local_irq_restore(flags);
+
+out:
+	return page;
+
+failed:
+	local_irq_restore(flags);
+
+	return NULL;
+}
+
+static inline void post_alloc_hook(struct page *page, unsigned int order,
+				gfp_t gfp_flags)
+{
+	set_page_private(page, 0);
+	set_page_refcounted(page);
+
+	arch_alloc_page(page, order);
+}
+
+void prep_compound_page(struct page *page, unsigned int order)
+{
+	int i;
+	int nr_pages = 1 << order;
+
+	set_compound_order(page, order);
+	__SetPageHead(page);
+	for (i = 1; i < nr_pages; i++) {
+		struct page *p = page + i;
+		set_page_count(p, 0);
+		set_compound_head(p, page);
+	}
+}
+
+static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags)
+{
+	int i;
+
+	post_alloc_hook(page, order, gfp_flags);
+
+	if (gfp_flags & __GFP_ZERO)
+		for (i = 0; i < (1 << order); i++)
+			clear_page(page_address(page + i));
+
+	if (order)
+		prep_compound_page(page, order);
+}
+
+/*
+ * get_page_from_freelist goes through the zonelist trying to allocate
+ * a page.
+ */
+static struct page *
+get_page_from_freelist(gfp_t gfp_mask, unsigned int order, const struct alloc_context *ac)
+{
+	struct page *page;
+	struct zone *zone = NODE_DATA()->node_zones + ac->zoneidx;
+
+	page = rmqueue(zone, order, gfp_mask);
+	if (page) {
+		prep_new_page(page, order, gfp_mask);
+
+		return page;
+	}
+
+	return NULL;
+}
+
+/*
+ * This is the 'heart' of the zoned buddy allocator.
+ */
+struct page *__alloc_pages(gfp_t gfp_mask, unsigned int order)
+{
+	struct page *page;
+	struct alloc_context ac = { };
+
+	if (unlikely(order >= MAX_ORDER)) {
+		WARN_ON_ONCE(!(gfp_mask & __GFP_NOWARN));
+		return NULL;
+	}
+
+	if (!prepare_alloc_pages(gfp_mask, order, &ac))
+		return NULL;
+
+	/* First allocation attempt */
+	page = get_page_from_freelist(gfp_mask, order, &ac);
+	if (likely(page))
+		goto out;
+	
+	page = __alloc_pages_slowpath(gfp_mask, order, &ac);
+
+out:
+
+	return page;
+}
+
+u64 __get_free_pages(gfp_t gfp_mask, unsigned int order)
+{
+	struct page *page;
+
+	page = alloc_pages(gfp_mask, order);
+	if (!page)
+		return 0;
+	return (u64)page_address(page);
+}
+
+u64 get_zeroed_page(gfp_t gfp_mask)
+{
+	return __get_free_pages(gfp_mask | __GFP_ZERO, 0);
 }
 
 static inline void free_the_page(struct page *page, unsigned int order)

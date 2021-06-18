@@ -56,6 +56,21 @@ static inline enum zone_type gfp_zone(gfp_t flags)
 	return ZONE_NORMAL;
 }
 
+struct page *__alloc_pages(gfp_t gfp_mask, unsigned int order);
+
+#define alloc_pages(gfp_mask, order) \
+		__alloc_pages(gfp_mask, order)
+#define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
+
+extern u64 __get_free_pages(gfp_t gfp_mask, unsigned int order);
+extern u64 get_zeroed_page(gfp_t gfp_mask);
+
+#define __get_free_page(gfp_mask) \
+		__get_free_pages((gfp_mask), 0)
+
+#define __get_dma_pages(gfp_mask, order) \
+		__get_free_pages((gfp_mask) | GFP_DMA, (order))
+
 extern void __free_pages(struct page *page, unsigned int order);
 extern void free_pages(u64 addr, unsigned int order);
 extern void free_unref_page(struct page *page);

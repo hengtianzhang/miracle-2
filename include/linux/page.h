@@ -102,9 +102,7 @@ static inline void put_page(struct page *page)
 	page = compound_head(page);
 
 	if (put_page_testzero(page))
-		;
-		/* TODO */
-		//__put_page(page);
+		__free_pages(page, compound_order(page));
 }
 
 static inline struct zone *page_zone(const struct page *page)
@@ -149,6 +147,9 @@ static inline void mark_page_reserved(struct page *page)
 }
 
 void arch_free_page(struct page *page, int order);
+void arch_alloc_page(struct page *page, int order);
+
+void prep_compound_page(struct page *page, unsigned int order);
 
 void memblock_free_pages(struct page *page, u64 pfn, unsigned int order);
 u64 free_reserved_area(void *start, void *end, int poison, const char *s);
