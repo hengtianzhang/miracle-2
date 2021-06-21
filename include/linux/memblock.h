@@ -26,6 +26,8 @@
 enum memblock_flags {
 	MEMBLOCK_NONE		= 0x0,	/* No special request */
 	MEMBLOCK_NOMAP		= 0x1,	/* don't add to kernel direct mapping */
+	MEMBLOCK_DMA		= 0x2,
+	MEMBLOCK_MOVABLE	= 0x3,
 };
 
 /**
@@ -88,6 +90,16 @@ extern int memblock_debug;
 static inline bool memblock_is_nomap(struct memblock_region *m)
 {
 	return m->flags & MEMBLOCK_NOMAP;
+}
+
+static inline bool memblock_is_dma(struct memblock_region *m)
+{
+	return m->flags & MEMBLOCK_DMA;
+}
+
+static inline bool memblock_is_movable(struct memblock_region *m)
+{
+	return m->flags & MEMBLOCK_MOVABLE;
 }
 
 static inline void memblock_set_region_flags(struct memblock_region *r,
@@ -291,8 +303,16 @@ int memblock_add(phys_addr_t base, phys_addr_t size);
 int memblock_remove(phys_addr_t base, phys_addr_t size);
 int memblock_free(phys_addr_t base, phys_addr_t size);
 int memblock_reserve(phys_addr_t base, phys_addr_t size);
+
 int memblock_mark_nomap(phys_addr_t base, phys_addr_t size);
 int memblock_clear_nomap(phys_addr_t base, phys_addr_t size);
+
+int memblock_mark_dma(phys_addr_t base, phys_addr_t size);
+int memblock_clear_dma(phys_addr_t base, phys_addr_t size);
+
+int memblock_mark_movable(phys_addr_t base, phys_addr_t size);
+int memblock_clear_movable(phys_addr_t base, phys_addr_t size);
+
 phys_addr_t memblock_alloc_range(phys_addr_t size, phys_addr_t align,
 					phys_addr_t start, phys_addr_t end,
 					enum memblock_flags flags);
