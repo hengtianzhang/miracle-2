@@ -2,6 +2,8 @@
 #ifndef __LINUX_PAGE_FLAGS_LAYOUT_H_
 #define __LINUX_PAGE_FLAGS_LAYOUT_H_
 
+#include <linux/types.h>
+
 #include <generated/bounds.h>
 
 /*

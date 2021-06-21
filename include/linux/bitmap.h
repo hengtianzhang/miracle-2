@@ -8,6 +8,7 @@
 #include <linux/bitops.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
+#include <linux/slab.h>
 
 #define DECLARE_BITMAP(name,bits) \
 	u64 name[BITS_TO_LONGS(bits)]
@@ -111,17 +112,18 @@
  */
 static inline u64 *bitmap_alloc(unsigned int nbits, gfp_t flags)
 {
-	return NULL;
+	return kmalloc_array(BITS_TO_LONGS(nbits), sizeof(u64),
+			     flags);
 }
 
 static inline u64 *bitmap_zalloc(unsigned int nbits, gfp_t flags)
 {
-	return NULL;
+	return bitmap_alloc(nbits, flags | __GFP_ZERO);
 }
 
 static inline void bitmap_free(const u64 *bitmap)
 {
-
+	kfree(bitmap);
 }
 
 /*

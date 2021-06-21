@@ -24,6 +24,8 @@
 #define pageblock_order (MAX_ORDER - 1)
 #define pageblock_nr_pages (1ULL << pageblock_order)
 
+#define PAGE_ALLOC_COSTLY_ORDER 3
+
 struct free_area {
 	struct list_head	free_list;
 	u64		nr_free;

@@ -16,6 +16,7 @@
 #define _struct_page_alignment
 #endif
 
+struct kmem_cache;
 struct page {
 	u64 flags;
 
@@ -23,6 +24,33 @@ struct page {
 		struct {
 			struct list_head lru;
 			u64 private;
+		};
+		struct {
+			union {
+				struct list_head slab_list;	/* uses lru */
+				struct {	/* Partial pages */
+					struct page *next;
+#ifdef CONFIG_64BIT
+					int pages;	/* Nr of pages left */
+					int pobjects;	/* Approximate count */
+#else
+					short int pages;
+					short int pobjects;
+#endif
+				};
+			};
+			struct kmem_cache *slab_cache; /* not slob */
+			/* Double-word boundary */
+			void *freelist;		/* first free object */
+			union {
+				void *s_mem;	/* slab: first object */
+				u64  counters;		/* SLUB */
+				struct {			/* SLUB */
+					unsigned inuse:16;
+					unsigned objects:15;
+					unsigned frozen:1;
+				};
+			};
 		};
 		struct {	/* Tail pages of compound page */
 			u64 compound_head;	/* Bit zero is set */

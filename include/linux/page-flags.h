@@ -11,10 +11,12 @@
 #include <linux/bug.h>
 #ifndef __GENERATING_BOUNDS_H
 #include <linux/mm_types.h>
+
 #include <generated/bounds.h>
 #endif /* !__GENERATING_BOUNDS_H */
 
 enum pageflags {
+	PG_locked,
 	PG_head,
 	PG_buddy,
 	PG_slab,
@@ -136,6 +138,8 @@ static __always_inline int TestClearPage##uname(struct page *page)	\
 #define TESTSCFLAG(uname, lname, policy)				\
 	TESTSETFLAG(uname, lname, policy)				\
 	TESTCLEARFLAG(uname, lname, policy)
+
+__PAGEFLAG(Locked, locked, PF_NO_TAIL)
 
 __PAGEFLAG(Slab, slab, PF_NO_TAIL)
 

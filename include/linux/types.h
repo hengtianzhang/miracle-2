@@ -56,6 +56,7 @@ typedef u32 phys_addr_t;
 #endif
 
 typedef u64 __bitwise gfp_t;
+typedef u64 __bitwise slab_flags_t;
 
 typedef phys_addr_t resource_size_t;
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//#include <linux/slab.h>
+#include <linux/slab.h>
 #include <linux/kernel.h>
 #include <linux/bitops.h>
 #include <linux/cpumask.h>
@@ -21,18 +21,14 @@
  */
 bool alloc_cpumask_var(cpumask_t **mask, gfp_t flags)
 {
-#if 0
-	*mask = kmalloc_node(cpumask_size(), flags, node);
+	*mask = kmalloc(cpumask_size(), flags);
 
 	return *mask != NULL;
-#endif
-	return NULL;
 }
 
 bool zalloc_cpumask_var(cpumask_t **mask, gfp_t flags)
 {
-	//return alloc_cpumask_var(mask, flags | __GFP_ZERO);
-	return false;
+	return alloc_cpumask_var(mask, flags | __GFP_ZERO);
 }
 
 /**
@@ -43,7 +39,5 @@ bool zalloc_cpumask_var(cpumask_t **mask, gfp_t flags)
  */
 void free_cpumask_var(cpumask_t *mask)
 {
-#if 0
 	kfree(mask);
-#endif
 }

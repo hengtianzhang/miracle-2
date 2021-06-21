@@ -350,8 +350,8 @@ extern void __bad_size_call_parameter(void);
 	bool pdcrb_ret__;						\
 	__verify_pcpu_ptr(&(pcp1));					\
 	BUILD_BUG_ON(sizeof(pcp1) != sizeof(pcp2));			\
-	VM_BUG_ON((u64)(&(pcp1)) % (2 * sizeof(pcp1)));	\
-	VM_BUG_ON((u64)(&(pcp2)) !=				\
+	BUG_ON((u64)(&(pcp1)) % (2 * sizeof(pcp1)));	\
+	BUG_ON((u64)(&(pcp2)) !=				\
 		  (u64)(&(pcp1)) + sizeof(pcp1));		\
 	switch(sizeof(pcp1)) {						\
 	case 1: pdcrb_ret__ = stem##1(pcp1, pcp2, __VA_ARGS__); break;	\
