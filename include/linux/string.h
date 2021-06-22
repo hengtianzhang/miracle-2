@@ -2,6 +2,7 @@
 #ifndef __LINUX_STRING_H_
 #define __LINUX_STRING_H_
 
+#include <stdarg.h>
 #include <linux/compiler.h>	/* for inline */
 #include <linux/types.h>	/* for size_t */
 #include <linux/stddef.h>	/* for NULL */
@@ -142,4 +143,15 @@ static inline const char *kbasename(const char *path)
 	return tail ? tail + 1 : path;
 }
 
+#ifdef __KERNEL__
+extern const char *kstrdup_const(const char *s, gfp_t gfp);
+extern void kfree_const(const void *x);
+
+extern char *kstrdup(const char *s, gfp_t gfp) __malloc;
+
+int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
+int bstr_printf(char *buf, size_t size, const char *fmt, const u32 *bin_buf);
+int bprintf(u32 *bin_buf, size_t size, const char *fmt, ...) __printf(3, 4);
+
+#endif /* __KERNEL__ */
 #endif /* !__LINUX_STRING_H_ */

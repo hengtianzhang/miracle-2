@@ -5,11 +5,13 @@
  * (C) 2012 Christoph Lameter <cl@linux.com>
  */
 #include <linux/slab.h>
+#include <linux/mutex.h>
 
 #include "slab.h"
 
 enum slab_state slab_state;
 LIST_HEAD(slab_caches);
+DEFINE_MUTEX(slab_mutex);
 struct kmem_cache *kmem_cache;
 
 #define SLAB_NEVER_MERGE (SLAB_POISON | SLAB_STORE_USER)
@@ -331,4 +333,125 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 	}
 
 	return kmalloc_caches[kmalloc_type(flags)][index];
+}
+
+static struct kmem_cache *create_cache(const char *name,
+		unsigned int object_size, unsigned int align,
+		slab_flags_t flags, unsigned int useroffset,
+		unsigned int usersize, void (*ctor)(void *),
+		struct kmem_cache *root_cache)
+{
+	struct kmem_cache *s;
+	int err;
+
+	if (WARN_ON(useroffset + usersize > object_size))
+		useroffset = usersize = 0;
+
+	err = -ENOMEM;
+	s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
+	if (!s)
+		goto out;
+
+	s->name = name;
+	s->size = s->object_size = object_size;
+	s->align = align;
+	s->ctor = ctor;
+	s->useroffset = useroffset;
+	s->usersize = usersize;
+
+	err = __kmem_cache_create(s, flags);
+	if (err)
+		goto out_free_cache;
+
+	s->refcount = 1;
+	list_add(&s->list, &slab_caches);
+out:
+	if (err)
+		return ERR_PTR(err);
+	return s;
+
+out_free_cache:
+	kmem_cache_free(kmem_cache, s);
+	goto out;
+}
+
+struct kmem_cache *
+kmem_cache_create_usercopy(const char *name,
+		  unsigned int size, unsigned int align,
+		  slab_flags_t flags,
+		  unsigned int useroffset, unsigned int usersize,
+		  void (*ctor)(void *))
+{
+	struct kmem_cache *s = NULL;
+	const char *cache_name;
+	int err = 0;
+
+	mutex_lock(&slab_mutex);
+
+	/* Refuse requests with allocator specific flags */
+	if (flags & ~SLAB_FLAGS_PERMITTED) {
+		err = -EINVAL;
+		goto out_unlock;
+	}
+
+	/*
+	 * Some allocators will constraint the set of valid flags to a subset
+	 * of all flags. We expect them to define CACHE_CREATE_MASK in this
+	 * case, and we'll just provide them with a sanitized version of the
+	 * passed flags.
+	 */
+	flags &= CACHE_CREATE_MASK;
+
+	/* Fail closed on bad usersize of useroffset values. */
+	if (WARN_ON(!usersize && useroffset) ||
+	    WARN_ON(size < usersize || size - usersize < useroffset))
+		usersize = useroffset = 0;
+
+	if (!usersize)
+		s = __kmem_cache_alias(name, size, align, flags, ctor);
+	if (s)
+		goto out_unlock;
+
+	cache_name = kstrdup_const(name, GFP_KERNEL);
+	if (!cache_name) {
+		err = -ENOMEM;
+		goto out_unlock;
+	}
+
+	s = create_cache(cache_name, size,
+			 calculate_alignment(flags, align, size),
+			 flags, useroffset, usersize, ctor, NULL);
+	if (IS_ERR(s)) {
+		err = PTR_ERR(s);
+		kfree_const(cache_name);
+	}
+
+out_unlock:
+	mutex_unlock(&slab_mutex);
+
+	if (err) {
+		if (flags & SLAB_PANIC)
+			panic("kmem_cache_create: Failed to create slab '%s'. Error %d\n",
+				name, err);
+		else {
+			pr_warn("kmem_cache_create(%s) failed with error %d\n",
+				name, err);
+			dump_stack();
+		}
+		return NULL;
+	}
+	return s;
+}
+
+struct kmem_cache *
+kmem_cache_create(const char *name, unsigned int size, unsigned int align,
+		slab_flags_t flags, void (*ctor)(void *))
+{
+	return kmem_cache_create_usercopy(name, size, align, flags, 0, 0,
+					  ctor);
+}
+
+bool slab_is_available(void)
+{
+	return slab_state >= UP;
 }

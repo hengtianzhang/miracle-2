@@ -65,13 +65,13 @@
  *		- kaddr  - page address
  *		- size   - region size
  */
-extern void __flush_icache_range(unsigned long start, unsigned long end);
-extern int  invalidate_icache_range(unsigned long start, unsigned long end);
+extern void __flush_icache_range(u64 start, u64 end);
+extern int  invalidate_icache_range(u64 start, u64 end);
 extern void __inval_dcache_area(void *addr, size_t len);
 extern void __clean_dcache_area_poc(void *addr, size_t len);
 extern void __clean_dcache_area_pop(void *addr, size_t len);
 extern void __clean_dcache_area_pou(void *addr, size_t len);
-extern long __flush_cache_user_range(unsigned long start, unsigned long end);
+extern s64 __flush_cache_user_range(u64 start, u64 end);
 
 /*
  * Cache maintenance functions used by the DMA API. No to be used directly.
@@ -79,5 +79,13 @@ extern long __flush_cache_user_range(unsigned long start, unsigned long end);
 extern void __dma_map_area(const void *, size_t, int);
 extern void __dma_unmap_area(const void *, size_t, int);
 extern void __dma_flush_area(const void *, size_t);
+
+static inline void flush_cache_vmap(u64 start, u64 end)
+{
+}
+
+static inline void flush_cache_vunmap(u64 start, u64 end)
+{
+}
 
 #endif /* !__ASM_CACHEFLUSH_H_ */

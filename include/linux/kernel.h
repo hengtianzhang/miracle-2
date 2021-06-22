@@ -363,8 +363,7 @@ extern s64 simple_strtol(const char *,char **,unsigned int);
 extern u64 simple_strtoull(const char *,char **,unsigned int);
 extern s64 simple_strtoll(const char *,char **,unsigned int);
 
-extern int num_to_str(char *buf, int size,
-		      u64 num, unsigned int width);
+extern int num_to_str(char *buf, int size, u64 num, unsigned int width);
 
 extern __printf(2, 3) int sprintf(char *buf, const char * fmt, ...);
 extern __printf(2, 0) int vsprintf(char *buf, const char *, va_list);

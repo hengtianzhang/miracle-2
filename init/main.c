@@ -17,6 +17,13 @@
 #include <linux/irqflags.h>
 #include <linux/cache.h>
 #include <linux/smp.h>
+#include <linux/jump_label.h>
+
+/*
+ * Used to generate warnings if static_key manipulation functions are used
+ * before jump_label_init is called.
+ */
+bool static_key_initialized __read_mostly;
 
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'

@@ -8,3 +8,4 @@ obj-$(CONFIG_SMP)		+= smp.o
 
 obj-y += locking/
 obj-y += printk/
+obj-y += sched/

@@ -1372,3 +1372,21 @@ int __kmem_cache_create(struct kmem_cache *s, slab_flags_t flags)
 
 	return err;
 }
+
+void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, u64 caller)
+{
+	struct kmem_cache *s;
+	void *ret;
+
+	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE))
+		return kmalloc_large(size, gfpflags);
+
+	s = kmalloc_slab(size, gfpflags);
+
+	if (unlikely(ZERO_OR_NULL_PTR(s)))
+		return s;
+
+	ret = slab_alloc(s, gfpflags, caller);
+
+	return ret;
+}

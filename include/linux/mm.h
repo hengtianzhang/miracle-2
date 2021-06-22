@@ -45,5 +45,7 @@
 
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 
+#define offset_in_page(p)	((u64)(p) & ~PAGE_MASK)
+
 #endif /* __KERNEL__ */
 #endif /* !__LINUX_MM_H_ */

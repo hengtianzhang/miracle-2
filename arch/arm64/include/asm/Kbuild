@@ -2,3 +2,4 @@ generic-y += div64.h
 generic-y += mcs_spinlock.h
 generic-y += qrwlock.h
 generic-y += qspinlock.h
+generic-y += unaligned.h

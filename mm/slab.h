@@ -22,6 +22,9 @@ enum slab_state {
 
 extern enum slab_state slab_state;
 
+/* The slab cache mutex protects the management structures during changes */
+extern struct mutex slab_mutex;
+
 extern struct list_head slab_caches;
 
 extern struct kmem_cache *kmem_cache;
@@ -40,6 +43,17 @@ struct kmem_cache_node {
 	u64 nr_partial;
 	struct list_head partial;
 };
+
+/* Legal flag mask for kmem_cache_create(), for various configurations */
+#define SLAB_CORE_FLAGS (SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA | SLAB_PANIC)
+
+/* Common flags available with current configuration */
+#define CACHE_CREATE_MASK (SLAB_CORE_FLAGS)
+
+#define SLAB_FLAGS_PERMITTED (SLAB_CORE_FLAGS | \
+			      SLAB_POISON | \
+			      SLAB_STORE_USER | \
+			      SLAB_CONSISTENCY_CHECKS)
 
 static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
 						     gfp_t flags)

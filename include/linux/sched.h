@@ -3,6 +3,7 @@
 #define __LINUX_SCHED_H_
 
 #include <linux/atomic.h>
+#include <linux/spinlock.h>
 
 #include <asm/thread_info.h>
 
@@ -61,5 +62,11 @@ struct task_struct {
 };
 
 extern u64 init_stack[THREAD_SIZE / sizeof(u64)];
+
+extern int __cond_resched_lock(spinlock_t *lock);
+
+#define cond_resched_lock(lock) ({				\
+	__cond_resched_lock(lock);				\
+})
 
 #endif /* !__LINUX_SCHED_H_ */

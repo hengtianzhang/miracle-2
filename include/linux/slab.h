@@ -17,6 +17,8 @@
 #include <linux/page.h>
 #include <linux/overflow.h>
 
+struct kmem_cache;
+
 /* DEBUG: Perform (expensive) checks on alloc/free */
 #define SLAB_CONSISTENCY_CHECKS	((slab_flags_t __force)0x00000100U)
 
@@ -160,7 +162,18 @@ static __always_inline unsigned int kmalloc_index(size_t size)
 	return -1;
 }
 
-struct kmem_cache;
+bool slab_is_available(void);
+void __init kmem_cache_init(void);
+
+struct kmem_cache *kmem_cache_create(const char *name, unsigned int size,
+			unsigned int align, slab_flags_t flags,
+			void (*ctor)(void *));
+struct kmem_cache *kmem_cache_create_usercopy(const char *name,
+			unsigned int size, unsigned int align,
+			slab_flags_t flags,
+			unsigned int useroffset, unsigned int usersize,
+			void (*ctor)(void *));
+
 void *__kmalloc(size_t size, gfp_t flags) __assume_kmalloc_alignment __malloc;
 void *kmem_cache_alloc(struct kmem_cache *, gfp_t flags) __assume_slab_alignment __malloc;
 void kmem_cache_free(struct kmem_cache *, void *);
@@ -178,8 +191,6 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 
 	return kmalloc_order(size, flags, order);
 }
-
-void __init kmem_cache_init(void);
 
 void kfree(const void *);
 size_t ksize(const void *);
@@ -204,6 +215,11 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
 	return __kmalloc(size, flags);
 }
 
+static inline void *kzalloc(size_t size, gfp_t flags)
+{
+	return kmalloc(size, flags | __GFP_ZERO);
+}
+
 static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
 {
 	size_t bytes;
@@ -214,5 +230,14 @@ static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
 		return kmalloc(bytes, flags);
 	return __kmalloc(bytes, flags);
 }
+
+static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
+{
+	return kmalloc_array(n, size, flags | __GFP_ZERO);
+}
+
+extern void *__kmalloc_track_caller(size_t, gfp_t, u64);
+#define kmalloc_track_caller(size, flags) \
+	__kmalloc_track_caller(size, flags, _RET_IP_)
 
 #endif /* !__LINUX_SLAB_H_ */

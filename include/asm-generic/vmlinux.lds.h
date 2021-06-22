@@ -190,6 +190,7 @@
 	/* __*init sections */						\
 	__init_rodata : AT(ADDR(__init_rodata) - LOAD_OFFSET) {		\
 		MEM_KEEP(init.rodata)					\
+		__end_rodata = .;						\
 	}								\
 									\
 	. = ALIGN((align));

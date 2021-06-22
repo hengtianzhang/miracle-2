@@ -4,7 +4,9 @@
 
 #include <linux/mm_types.h>
 #include <linux/list.h>
+#include <linux/llist.h>
 #include <linux/types.h>
+#include <linux/rbtree.h>
 
 #include <asm/page.h>
 
@@ -14,7 +16,6 @@
 #define VM_MAP			0x00000004	/* vmap()ed pages */
 #define VM_USERMAP		0x00000008	/* suitable for remap_vmalloc_range */
 #define VM_UNINITIALIZED	0x00000020	/* vm_struct is not fully initialized */
-#define VM_NO_GUARD		0x00000040      /* don't add guard page */
 
 struct vm_struct {
 	struct vm_struct	*next;
@@ -25,6 +26,16 @@ struct vm_struct {
 	unsigned int		nr_pages;
 	phys_addr_t		phys_addr;
 	const void		*caller;
+};
+
+struct vmap_area {
+	u64 va_start;
+	u64 va_end;
+	u64 flags;
+	struct rb_node rb_node;         /* address sorted rbtree */
+	struct list_head list;          /* address sorted list */
+	struct llist_node purge_list;    /* "lazy purge" list */
+	struct vm_struct *vm;
 };
 
 /*
