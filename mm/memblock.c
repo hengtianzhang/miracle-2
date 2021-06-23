@@ -12,6 +12,7 @@
 #include <linux/kernel.h>
 #include <linux/memblock.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/cache.h>
 
 #include <asm/sections.h>
@@ -43,6 +44,8 @@ struct memblock memblock __initdata_memblock = {
 
 int memblock_debug __initdata_memblock;
 static int memblock_can_resize __initdata_memblock;
+static int memblock_memory_in_slab __initdata_memblock = 0;
+static int memblock_reserved_in_slab __initdata_memblock = 0;
 
 enum memblock_flags __init_memblock choose_memblock_flags(void)
 {
@@ -270,6 +273,8 @@ static int __init_memblock memblock_double_array(struct memblock_type *type,
 	struct memblock_region *new_array, *old_array;
 	phys_addr_t old_alloc_size, new_alloc_size;
 	phys_addr_t old_size, new_size, addr, new_end;
+	int use_slab = slab_is_available();
+	int *in_slab;
 
 	/* We don't allow resizing until we know about the reserved regions
 	 * of memory that aren't suitable for allocation
@@ -287,22 +292,41 @@ static int __init_memblock memblock_double_array(struct memblock_type *type,
 	old_alloc_size = PAGE_ALIGN(old_size);
 	new_alloc_size = PAGE_ALIGN(new_size);
 
-	/*
-	 * Try to find some space for it.
+	/* Retrieve the slab flag */
+	if (type == &memblock.memory)
+		in_slab = &memblock_memory_in_slab;
+	else
+		in_slab = &memblock_reserved_in_slab;
+
+	/* Try to find some space for it.
+	 *
+	 * WARNING: We assume that either slab_is_available() and we use it or
+	 * we use MEMBLOCK for allocations. That means that this is unsafe to
+	 * use when bootmem is currently active (unless bootmem itself is
+	 * implemented on top of MEMBLOCK which isn't the case yet)
+	 *
+	 * This should however not be an issue for now, as we currently only
+	 * call into MEMBLOCK while it's still active, or much later when slab
+	 * is active for memory hotplug operations
 	 */
-	/* only exclude range when trying to double reserved.regions */
-	if (type != &memblock.reserved)
-		new_area_start = new_area_size = 0;
+	if (use_slab) {
+		new_array = kmalloc(new_size, GFP_KERNEL);
+		addr = new_array ? __pa(new_array) : 0;
+	} else {
+		/* only exclude range when trying to double reserved.regions */
+		if (type != &memblock.reserved)
+			new_area_start = new_area_size = 0;
 
-	addr = memblock_find_in_range(new_area_start + new_area_size,
-					memblock.current_limit,
-					new_alloc_size, PAGE_SIZE);
-	if (!addr && new_area_size)
-		addr = memblock_find_in_range(0,
-			min(new_area_start, memblock.current_limit),
-			new_alloc_size, PAGE_SIZE);
+		addr = memblock_find_in_range(new_area_start + new_area_size,
+						memblock.current_limit,
+						new_alloc_size, PAGE_SIZE);
+		if (!addr && new_area_size)
+			addr = memblock_find_in_range(0,
+				min(new_area_start, memblock.current_limit),
+				new_alloc_size, PAGE_SIZE);
 
-	new_array = addr ? __va(addr) : NULL;
+		new_array = addr ? __va(addr) : NULL;
+	}
 
 	if (!addr) {
 		pr_err("memblock: Failed to double %s array from %lld to %lld entries !\n",
@@ -325,7 +349,10 @@ static int __init_memblock memblock_double_array(struct memblock_type *type,
 	type->regions = new_array;
 	type->max <<= 1;
 
-	if (old_array != memblock_memory_init_regions &&
+	/* Free old array. We needn't free it if the array is the static one */
+	if (*in_slab)
+		kfree(old_array);
+	else if (old_array != memblock_memory_init_regions &&
 		 old_array != memblock_reserved_init_regions)
 		memblock_free(__pa(old_array), old_alloc_size);
 
@@ -333,7 +360,11 @@ static int __init_memblock memblock_double_array(struct memblock_type *type,
 	 * Reserve the new array if that comes from the memblock.  Otherwise, we
 	 * needn't do it
 	 */
-	BUG_ON(memblock_reserve(addr, new_alloc_size));
+	if (!use_slab)
+		BUG_ON(memblock_reserve(addr, new_alloc_size));
+
+	/* Update slab flag */
+	*in_slab = use_slab;
 
 	return 0;
 }
@@ -1031,6 +1062,14 @@ static void * __init memblock_alloc_internal(
 	phys_addr_t alloc;
 	void *ptr;
 	enum memblock_flags flags = choose_memblock_flags();
+
+	/*
+	 * Detect any accidental use of these APIs after slab is ready, as at
+	 * this moment memblock may be deinitialized already and its
+	 * internal data may be destroyed (after execution of memblock_free_all)
+	 */
+	if (WARN_ON_ONCE(slab_is_available()))
+		return kzalloc(size, GFP_KERNEL);
 
 	if (!align) {
 		dump_stack();
