@@ -162,4 +162,16 @@ static inline u64 totalram_pages(void)
 	return (u64)NODE_DATA()->node_spanned_pages;
 }
 
+static inline bool pgtable_page_ctor(struct page *page)
+{
+	__SetPageTable(page);
+
+	return true;
+}
+
+static inline void pgtable_page_dtor(struct page *page)
+{
+	__ClearPageTable(page);
+}
+
 #endif /* !__LINUX_PAGE_H_ */

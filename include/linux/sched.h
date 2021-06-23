@@ -4,6 +4,7 @@
 
 #include <linux/atomic.h>
 #include <linux/spinlock.h>
+#include <linux/mm_types.h>
 
 #include <asm/thread_info.h>
 
@@ -33,6 +34,11 @@ struct task_struct {
 
 	void				*stack;
 	atomic_t			usage;
+
+	struct mm_struct		*mm;
+	struct mm_struct		*active_mm;
+
+	pid_t				pid;
 
 #ifdef CONFIG_STACKPROTECTOR
 	/* Canary value for the -fstack-protector GCC feature: */
@@ -68,5 +74,10 @@ extern int __cond_resched_lock(spinlock_t *lock);
 #define cond_resched_lock(lock) ({				\
 	__cond_resched_lock(lock);				\
 })
+
+static inline pid_t task_pid_nr(struct task_struct *tsk)
+{
+	return tsk->pid;
+}
 
 #endif /* !__LINUX_SCHED_H_ */

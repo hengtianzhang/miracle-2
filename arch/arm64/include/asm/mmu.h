@@ -17,8 +17,11 @@
 #define __ASM_MMU_H_
 
 #include <linux/atomic.h>
+#include <linux/types.h>
 
 #ifndef __ASSEMBLY__
+
+struct mm_struct;
 
 typedef struct {
 	atomic64_t id;
@@ -34,6 +37,13 @@ typedef struct {
 
 #define INIT_MM_CONTEXT(name)	\
 	.pgd = init_pg_dir,
+
+extern void paging_init(void);
+extern void mark_rodata_ro(void);
+extern void mark_linear_text_alias_ro(void);
+extern void create_pgd_mapping(struct mm_struct *mm, phys_addr_t phys,
+			       u64 virt, phys_addr_t size,
+			       pgprot_t prot, bool page_mappings_only);
 
 #endif /* !__ASSEMBLY__ */
 #endif /* !__ASM_MMU_H_ */

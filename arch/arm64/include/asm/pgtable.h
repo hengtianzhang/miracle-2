@@ -26,6 +26,8 @@
 
 #include <linux/compiler.h>
 
+#include <asm/pgtable.h>
+
 extern void __pte_error(const char *file, int line, u64 val);
 extern void __pmd_error(const char *file, int line, u64 val);
 extern void __pud_error(const char *file, int line, u64 val);
@@ -678,6 +680,11 @@ static inline void ptep_set_wrprotect(struct mm_struct *mm, u64 address, pte_t *
 #define __swp_entry_to_pte(swp)	((pte_t) { (swp).val })
 
 extern int kern_addr_valid(u64 addr);
+
+void pgd_cache_init(void);
+#define pgtable_cache_init	pgd_cache_init
+
+#include <asm-generic/pgtable.h>
 
 #define phys_to_ttbr(addr)	(addr)
 

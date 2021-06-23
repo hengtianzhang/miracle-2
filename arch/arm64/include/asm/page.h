@@ -12,6 +12,8 @@ extern void clear_page(void *to);
 
 extern int pfn_valid(u64 pfn);
 
+typedef struct page *pgtable_t;
+
 #include <asm/memory.h>
 #include <asm/pgtable-types.h>
 
