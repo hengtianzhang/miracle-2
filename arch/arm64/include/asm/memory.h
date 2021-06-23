@@ -24,6 +24,7 @@
 #include <linux/compiler.h>
 #include <linux/sizes.h>
 
+#include <asm/pgtable-hwdef.h>
 #include <asm/page-def.h>
 
 /*

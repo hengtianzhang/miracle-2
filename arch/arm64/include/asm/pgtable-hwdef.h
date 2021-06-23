@@ -64,6 +64,11 @@
 #define PMD_SIZE		(_AC(1, ULL) << PMD_SHIFT)
 #define PMD_MASK		(~(PMD_SIZE-1))
 #define PTRS_PER_PMD		PTRS_PER_PTE
+#else /* FIXME */
+#define PMD_SHIFT	PUD_SHIFT
+#define PMD_SIZE  	(1ULL << PMD_SHIFT)
+#define PMD_MASK  	(~(PMD_SIZE-1))
+#define PTRS_PER_PMD	1
 #endif
 
 /*
@@ -74,6 +79,11 @@
 #define PUD_SIZE		(_AC(1, ULL) << PUD_SHIFT)
 #define PUD_MASK		(~(PUD_SIZE-1))
 #define PTRS_PER_PUD		PTRS_PER_PTE
+#else /* FIXME true ? */
+#define PUD_SHIFT		PGDIR_SHIFT
+#define PUD_SIZE		(1ULL << PUD_SHIFT)
+#define PUD_MASK		(~(PUD_SIZE-1))
+#define PTRS_PER_PUD		1
 #endif
 
 /*

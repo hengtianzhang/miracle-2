@@ -157,4 +157,9 @@ u64 free_reserved_area(void *start, void *end, int poison, const char *s);
 bool is_free_buddy_page(struct page *page);
 void zone_pcp_reset(struct zone *zone);
 
+static inline u64 totalram_pages(void)
+{
+	return (u64)NODE_DATA()->node_spanned_pages;
+}
+
 #endif /* !__LINUX_PAGE_H_ */

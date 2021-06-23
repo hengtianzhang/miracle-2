@@ -6,6 +6,9 @@
 
 #ifdef __KERNEL__
 
+#include <linux/overflow.h>
+#include <linux/gfp.h>
+
 #include <asm/page.h>
 
 #ifndef __pa_symbol
@@ -43,9 +46,35 @@
 /* to align the pointer to the (next) page boundary */
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
+/* test whether an address (u64 or pointer) is aligned to PAGE_SIZE */
+#define PAGE_ALIGNED(addr)	IS_ALIGNED((u64)(addr), PAGE_SIZE)
+
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 
 #define offset_in_page(p)	((u64)(p) & ~PAGE_MASK)
+
+void kvfree(const void *addr);
+void *kvmalloc(size_t size, gfp_t flags);
+
+static inline void *kvzalloc(size_t size, gfp_t flags)
+{
+	return kvmalloc(size, flags | __GFP_ZERO);
+}
+
+static inline void *kvmalloc_array(size_t n, size_t size, gfp_t flags)
+{
+	size_t bytes;
+
+	if (unlikely(check_mul_overflow(n, size, &bytes)))
+		return NULL;
+
+	return kvmalloc(bytes, flags);
+}
+
+static inline void *kvcalloc(size_t n, size_t size, gfp_t flags)
+{
+	return kvmalloc_array(n, size, flags | __GFP_ZERO);
+}
 
 #endif /* __KERNEL__ */
 #endif /* !__LINUX_MM_H_ */

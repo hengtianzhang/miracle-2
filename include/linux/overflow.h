@@ -3,6 +3,7 @@
 #define __LINUX_OVERFLOW_H_
 
 #include <linux/compiler.h>
+#include <linux/kernel.h>
 
 /*
  * In the fallback code below, we need to compute the minimum and
