@@ -23,6 +23,7 @@ struct page {
 	union {
 		struct {
 			struct list_head lru;
+			pgoff_t index;		/* Our offset within mapping. */
 			u64 private;
 		};
 		struct {

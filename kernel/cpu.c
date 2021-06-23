@@ -6,6 +6,7 @@
 
 #include <linux/cpumask.h>
 #include <linux/cpu.h>
+#include <linux/smp.h>
 #include <linux/cache.h>
 
 struct cpumask __cpu_possible_mask __read_mostly;
@@ -29,4 +30,22 @@ int __cpu_setup_state(enum cpuhp_state state,
 {
 
 	return 0;
+}
+
+int __boot_cpu_id;
+
+/*
+ * Activate the first processor.
+ */
+void __init boot_cpu_init(void)
+{
+	int cpu = smp_processor_id();
+
+	/* Mark the boot cpu "present", "online" etc for SMP and UP case */
+	cpu_set_online(cpu);
+	cpu_set_active(cpu);
+	cpu_set_present(cpu);
+	cpu_set_possible(cpu);
+
+	__boot_cpu_id = cpu;
 }

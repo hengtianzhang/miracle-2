@@ -80,6 +80,7 @@ void vfree(const void *addr);
 
 extern void *vmalloc(u64 size);
 extern void *vzalloc(u64 size);
+extern void *__vmalloc(u64 size, gfp_t gfp_mask, pgprot_t prot);
 extern void *__vmalloc_node_range(u64 size, u64 align,
 			u64 start, u64 end, gfp_t gfp_mask,
 			pgprot_t prot, u64 vm_flags,
@@ -114,5 +115,7 @@ extern void set_iounmap_nonlazy(void);
 /* Support for virtually mapped pages */
 struct page *vmalloc_to_page(const void *addr);
 u64 vmalloc_to_pfn(const void *addr);
+
+#define VMALLOC_TOTAL (VMALLOC_END - VMALLOC_START)
 
 #endif /* !__LINUX_VMALLOC_H_ */

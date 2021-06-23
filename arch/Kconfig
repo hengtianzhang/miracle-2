@@ -150,4 +150,7 @@ config ARCH_WANT_LD_ORPHAN_WARN
 	  by the linker, since the locations of such sections can change between linker
 	  versions.
 
+config CPU_NO_EFFICIENT_FFS
+	def_bool n
+
 endmenu

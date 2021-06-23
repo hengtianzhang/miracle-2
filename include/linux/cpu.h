@@ -39,4 +39,6 @@ static inline int cpu_setup_state_multi(enum cpuhp_state state,
 				   (void *) teardown, true);
 }
 
+extern void boot_cpu_init(void);
+
 #endif /* !__LINUX_CPU_H_ */

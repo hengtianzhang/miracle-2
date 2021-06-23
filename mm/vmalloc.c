@@ -767,6 +767,12 @@ static void *__vmalloc_node(u64 size, u64 align,
 				gfp_mask, prot, 0, caller);
 }
 
+void *__vmalloc(u64 size, gfp_t gfp_mask, pgprot_t prot)
+{
+	return __vmalloc_node(size, 1, gfp_mask, prot,
+				__builtin_return_address(0));
+}
+
 static inline void *__vmalloc_node_flags(u64 size,
 					gfp_t flags)
 {

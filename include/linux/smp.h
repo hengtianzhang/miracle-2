@@ -8,4 +8,11 @@
 
 void smp_setup_processor_id(void);
 
+extern int __boot_cpu_id;
+
+static inline int get_boot_cpu_id(void)
+{
+	return __boot_cpu_id;
+}
+
 #endif /* !__LINUX_SMP_H_ */

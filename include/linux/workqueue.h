@@ -53,4 +53,16 @@ static inline void __init_work(struct work_struct *work, int onstack) { }
 #define INIT_WORK(_work, _func)						\
 	__INIT_WORK((_work), (_func), 0)
 
+#define WORK_DATA_STATIC_INIT()	\
+	ATOMIC_LONG_INIT((u64)(0 | 1))
+
+#define __WORK_INITIALIZER(n, f) {					\
+	.data = WORK_DATA_STATIC_INIT(),				\
+	.entry	= { &(n).entry, &(n).entry },				\
+	.func = (f),							\
+	}
+
+#define DECLARE_WORK(n, f)						\
+	struct work_struct n = __WORK_INITIALIZER(n, f)
+
 #endif /* !__LINUX_WORKQUEUE_H_ */
