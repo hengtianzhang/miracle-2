@@ -40,6 +40,11 @@ static inline const char *printk_skip_headers(const char *buffer)
 	return buffer;
 }
 
+asmlinkage __printf(5, 0)
+int vprintk_emit(int facility, int level,
+		 const char *dict, size_t dictlen,
+		 const char *fmt, va_list args);
+
 asmlinkage __printf(1, 2) __cold
 int printk(const char *fmt, ...);
 

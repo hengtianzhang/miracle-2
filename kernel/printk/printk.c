@@ -19,7 +19,62 @@
 #define pr_fmt(fmt) KBUILD_BASENAME ": " fmt
 
 #include <linux/kernel.h>
+#include <linux/irqflags.h>
 #include <linux/printk.h>
+
+#define PREFIX_MAX		32
+#define LOG_LINE_MAX		(1024 - PREFIX_MAX)
+
+extern void puts_q(const char *str); /* TODO Temp */
+asmlinkage int vprintk_emit(int facility, int level,
+			    const char *dict, size_t dictlen,
+			    const char *fmt, va_list args)
+{
+	static char textbuf[LOG_LINE_MAX];
+	char *text = textbuf;
+	size_t text_len = 0;
+	u64 flags;
+
+	/* This stops the holder of console_sem just where we want him */
+	local_irq_save(flags);
+
+	/*
+	 * The printf needs to come first; we need the syslog
+	 * prefix which might be passed-in as a parameter.
+	 */
+	text_len = vscnprintf(text, sizeof(textbuf), fmt, args);
+
+	/* mark and strip a trailing newline */
+	if (text_len && text[text_len-1] == '\n')
+		text_len--;
+
+	/* strip kernel syslog prefix and extract log level or control flags */
+	if (facility == 0) {
+		int kern_level = printk_get_level(text);
+
+		if (kern_level) {
+			const char *end_of_header = printk_skip_level(text);
+			switch (kern_level) {
+			case '0' ... '7':
+				if (level == -1)
+					level = kern_level - '0';
+			}
+			/*
+			 * No need to check length here because vscnprintf
+			 * put '\0' at the end of the string. Only valid and
+			 * newly printed level is detected.
+			 */
+			text_len -= end_of_header - text;
+			text = (char *)end_of_header;
+		}
+	}
+
+	puts_q(text);
+	
+	local_irq_restore(flags);
+
+	return text_len;
+}
 
 /**
  * printk - print a kernel message
@@ -44,7 +99,14 @@
  */
 asmlinkage __visible int printk(const char *fmt, ...)
 {
-	return 0;
+	va_list args;
+	int r;
+
+	va_start(args, fmt);
+	r = vprintk_emit(0, -1, NULL, 0, fmt, args);
+	va_end(args);
+
+	return r;
 }
 
 /**
