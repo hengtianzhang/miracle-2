@@ -89,6 +89,10 @@ struct mm_struct {
 		/* Architecture-specific MM context */
 		mm_context_t context;
 
+		u64 start_code, end_code, start_data, end_data;
+		u64 start_brk, brk, start_stack;
+		u64 arg_start, arg_end, env_start, env_end;
+
 		/*
 		 * An operation with batched TLB flushing is going on. Anything
 		 * that can move process memory needs to flush the TLB when

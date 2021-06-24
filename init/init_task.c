@@ -16,5 +16,7 @@ __init_task_data
 	.stack_refcount	= ATOMIC_INIT(1),
 	.state		= 0,
 	.stack		= init_stack,
+	.active_mm	= &init_mm,
+	.comm		= INIT_TASK_COMM,
 	.usage		= ATOMIC_INIT(2),
 };

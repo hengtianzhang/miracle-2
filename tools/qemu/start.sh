@@ -1,7 +1,7 @@
 #!/bin/sh
 
 qemu-system-aarch64 -cpu cortex-a57 -machine type=virt,gic-version=2 	\
-		-append "rdinit=/linuxrc console=ttyAMA0 earlycon=115200"	\
+		-append "rdinit=/linuxrc console=ttyAMA0 earlycon=115200 rodata=nofull"	\
 		-kernel ../../arch/arm64/boot/Image	\
 		-device virtio-scsi-device	\
 		-smp cores=4,threads=2	\

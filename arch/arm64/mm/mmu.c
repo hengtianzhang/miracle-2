@@ -542,10 +542,12 @@ static void __init map_kernel(pgd_t *pgdp)
 static int __init parse_rodata(char *arg)
 {
 	/* permit 'full' in addition to boolean options */
-	if (strcmp(arg, "full"))
-		return -EINVAL;
+	if (strcmp(arg, "nofull"))
+		rodata_full = false;
 
-	rodata_full = true;
+	if (strcmp(arg, "full"))
+		rodata_full = true;
+
 	return 0;
 }
 early_param("rodata", parse_rodata);
@@ -564,7 +566,7 @@ static void __init map_mem(pgd_t *pgdp)
 	struct memblock_region *reg;
 	int flags = 0;
 
-	if (rodata_full)
+	if (!rodata_full)
 		flags = NO_BLOCK_MAPPINGS | NO_CONT_MAPPINGS;
 
 	/*

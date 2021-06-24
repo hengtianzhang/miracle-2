@@ -153,5 +153,10 @@ struct obs_kernel_param {
 void __init parse_early_param(void);
 void __init parse_early_options(char *cmdline);
 
+/* used by init/main.c */
+void setup_arch(char **);
+
+#define COMMAND_LINE_SIZE 2048
+extern char __initdata boot_command_line[];
 #endif /* !__ASSEMBLY__ */
 #endif /* !__LINUX_INIT_H_ */

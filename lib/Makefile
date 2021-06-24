@@ -8,4 +8,4 @@ obj-$(CONFIG_SMP) += cpumask.o
 
 obj-y += dec_and_lock.o dump_stack.o kasprintf.o llist.o	\
 		xarray.o radix-tree.o idr.o hexdump.o vsprintf.o	\
-		string_helpers.o lcm.o gcd.o
+		string_helpers.o lcm.o gcd.o params.o

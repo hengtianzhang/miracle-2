@@ -41,4 +41,5 @@ struct of_phandle_args {
 	uint32_t args[MAX_PHANDLE_ARGS];
 };
 
+extern bool early_init_dt_scan(void *params);
 #endif /* !__LINUX_OF_H_ */
